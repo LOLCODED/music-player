@@ -1,0 +1,7 @@
+services:
+  music-player:
+    image: ghcr.io/LOLCODED/music-player:latest  # or build: . to build locally
+    container_name: music-player
+    ports:
+      - "4533:80"
+    restart: unless-stopped
