@@ -81,15 +81,14 @@ export function useAudioPlayer({
   // Play/pause
   useEffect(() => {
     if (!audioRef.current) return;
-    if (isPlaying && !isLoading) {
+    if (isPlaying) {
       audioRef.current.play().catch((err) => {
         console.error("Error playing audio:", err);
-        setIsLoading(false);
       });
     } else {
       audioRef.current.pause();
     }
-  }, [isPlaying, isLoading]);
+  }, [isPlaying]);
 
   // Audio events
   useEffect(() => {
