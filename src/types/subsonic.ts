@@ -44,13 +44,19 @@ export interface SubsonicPlaylist {
   coverArt?: string;
 }
 
-export interface SubsonicResponse<T> {
-  "subsonic-response": {
-    status: "ok" | "failed";
-    version: string;
-    error?: {
-      code: number;
-      message: string;
-    };
-  } & T;
+export interface SubsonicApiError {
+  code: number;
+  message: string;
+}
+
+export type SubsonicOkPayload<T> = { status: "ok"; version: string } & Partial<T>;
+
+interface SubsonicFailedPayload {
+  status: "failed";
+  version: string;
+  error?: SubsonicApiError;
+}
+
+export interface SubsonicEnvelope<T> {
+  "subsonic-response": SubsonicOkPayload<T> | SubsonicFailedPayload;
 }

@@ -1,10 +1,16 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { SubsonicSong } from "../types/subsonic";
 import { SubsonicService } from "../services/SubsonicService";
 import { getRecentSongs } from "../utils/recentlyPlayed";
-
-const PAGE_SIZE = 50;
-const BULK_SIZE = 500;
+import { toErrorMessage } from "../utils/errors";
+import { shuffleArray } from "../utils/shuffle";
+import {
+  SONGS_PAGE_SIZE,
+  BULK_FETCH_SIZE,
+  SONG_SEARCH_LIMIT,
+  SEARCH_DEBOUNCE_MS,
+} from "../utils/constants";
+import { useCoverArtUrl } from "./useCoverArt";
 
 export type SongSortType =
   | "titleAsc"
@@ -19,27 +25,38 @@ export type SongSortType =
 function sortSongs(songs: SubsonicSong[], sort: SongSortType): SubsonicSong[] {
   const s = [...songs];
   switch (sort) {
-    case "titleAsc":  return s.sort((a, b) => a.title.localeCompare(b.title));
-    case "titleDesc": return s.sort((a, b) => b.title.localeCompare(a.title));
-    case "artistAsc": return s.sort((a, b) => a.artist.localeCompare(b.artist));
-    case "artistDesc": return s.sort((a, b) => b.artist.localeCompare(a.artist));
-    case "albumAsc":  return s.sort((a, b) => a.album.localeCompare(b.album));
-    case "durationDesc": return s.sort((a, b) => b.duration - a.duration);
-    case "random": {
-      for (let i = s.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [s[i], s[j]] = [s[j], s[i]];
-      }
+    case "titleAsc":
+      return s.sort((a, b) => a.title.localeCompare(b.title));
+    case "titleDesc":
+      return s.sort((a, b) => b.title.localeCompare(a.title));
+    case "artistAsc":
+      return s.sort((a, b) => a.artist.localeCompare(b.artist));
+    case "artistDesc":
+      return s.sort((a, b) => b.artist.localeCompare(a.artist));
+    case "albumAsc":
+      return s.sort((a, b) => a.album.localeCompare(b.album));
+    case "durationDesc":
+      return s.sort((a, b) => b.duration - a.duration);
+    case "random":
+      return shuffleArray(s);
+    default:
       return s;
-    }
-    default: return s;
   }
 }
 
-const BULK_SORTS: SongSortType[] = ["titleAsc", "titleDesc", "artistAsc", "artistDesc", "albumAsc", "durationDesc", "random"];
+const BULK_SORTS: SongSortType[] = [
+  "titleAsc",
+  "titleDesc",
+  "artistAsc",
+  "artistDesc",
+  "albumAsc",
+  "durationDesc",
+  "random",
+];
 
 export function useSongs(subsonicService: SubsonicService | null) {
   const [songs, setSongs] = useState<SubsonicSong[]>([]);
+  const [searchResults, setSearchResults] = useState<SubsonicSong[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchLoading, setSearchLoading] = useState(false);
   const [error, setError] = useState("");
@@ -49,86 +66,96 @@ export function useSongs(subsonicService: SubsonicService | null) {
   const offsetRef = useRef(0);
   const loadingRef = useRef(false);
 
-  const loadSongs = useCallback(async (reset: boolean = false) => {
-    if (!subsonicService || loadingRef.current) return;
+  const loadSongs = useCallback(
+    async (reset: boolean = false) => {
+      if (!subsonicService || loadingRef.current) return;
 
-    if (sortType === "recentlyPlayed") {
-      setSongs(getRecentSongs());
-      setHasMore(false);
-      setLoading(false);
-      return;
-    }
-
-    loadingRef.current = true;
-    const isBulk = BULK_SORTS.includes(sortType);
-    try {
-      if (reset) { setLoading(true); offsetRef.current = 0; }
-      setError("");
-      if (isBulk) {
-        const list = await subsonicService.getSongs(BULK_SIZE, 0);
-        const sorted = sortSongs(list, sortType);
-        setSongs(sorted);
+      if (sortType === "recentlyPlayed") {
+        setSongs(getRecentSongs());
         setHasMore(false);
-      } else {
-        const offset = reset ? 0 : offsetRef.current;
-        const list = await subsonicService.getSongs(PAGE_SIZE, offset);
-        if (reset) {
-          setSongs(list);
-        } else {
-          setSongs((prev) => [...prev, ...list]);
-        }
-        setHasMore(list.length === PAGE_SIZE);
-        offsetRef.current = offset + list.length;
+        setLoading(false);
+        return;
       }
-    } catch (err) {
-      setError(`Failed to load songs: ${err instanceof Error ? err.message : "Unknown error"}`);
-      setHasMore(false);
-    } finally {
-      setLoading(false);
-      loadingRef.current = false;
-    }
-  }, [subsonicService, sortType]);
 
-  useEffect(() => { loadSongs(true); }, [sortType]);
+      loadingRef.current = true;
+      const isBulk = BULK_SORTS.includes(sortType);
+      try {
+        if (reset) {
+          setLoading(true);
+          offsetRef.current = 0;
+        }
+        setError("");
+        if (isBulk) {
+          const list = await subsonicService.getSongs(BULK_FETCH_SIZE, 0);
+          setSongs(sortSongs(list, sortType));
+          setHasMore(false);
+        } else {
+          const offset = reset ? 0 : offsetRef.current;
+          const list = await subsonicService.getSongs(SONGS_PAGE_SIZE, offset);
+          setSongs((prev) => (reset ? list : [...prev, ...list]));
+          setHasMore(list.length === SONGS_PAGE_SIZE);
+          offsetRef.current = offset + list.length;
+        }
+      } catch (err) {
+        setError(`Failed to load songs: ${toErrorMessage(err)}`);
+        setHasMore(false);
+      } finally {
+        setLoading(false);
+        loadingRef.current = false;
+      }
+    },
+    [subsonicService, sortType]
+  );
+
+  useEffect(() => {
+    loadSongs(true);
+  }, [loadSongs]);
 
   // Text search — debounced, bypasses pagination
   useEffect(() => {
     const query = searchText.trim();
-    if (!query) return;
+    if (!query) {
+      setSearchResults(null);
+      setSearchLoading(false);
+      return;
+    }
     if (!subsonicService) return;
     let active = true;
     setSearchLoading(true);
     const timer = setTimeout(async () => {
       try {
-        const results = await subsonicService.searchSongs(query, 100, 0);
-        if (active) setSongs(results);
+        const results = await subsonicService.searchSongs(query, SONG_SEARCH_LIMIT, 0);
+        if (active) setSearchResults(results);
       } catch (err) {
-        if (active) setError(`Search failed: ${err instanceof Error ? err.message : "Unknown error"}`);
+        if (active) setError(`Search failed: ${toErrorMessage(err)}`);
       } finally {
         if (active) setSearchLoading(false);
       }
-    }, 300);
-    return () => { active = false; clearTimeout(timer); };
+    }, SEARCH_DEBOUNCE_MS);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
   }, [searchText, subsonicService]);
 
-  // When search is cleared, reload
-  useEffect(() => {
-    if (!searchText.trim()) loadSongs(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchText]);
+  const visibleSongs = useMemo(() => searchResults ?? songs, [searchResults, songs]);
 
-  const getCoverArtUrl = useCallback((coverArtId?: string): string => {
-    if (!coverArtId || !subsonicService) return "/assets/default-playlist-art.png";
-    return subsonicService.getCoverArtUrl(coverArtId, 300);
-  }, [subsonicService]);
+  const getCoverArtUrl = useCoverArtUrl(subsonicService);
+  const loadMore = useCallback(() => loadSongs(false), [loadSongs]);
+  const refresh = useCallback(() => loadSongs(true), [loadSongs]);
 
   return {
-    songs, loading, searchLoading, error,
+    songs: visibleSongs,
+    loading,
+    searchLoading,
+    error,
     hasMore: hasMore && !searchText.trim(),
-    searchText, sortType,
-    setSearchText, setSortType,
-    loadMore: () => loadSongs(false),
-    refresh: () => loadSongs(true),
+    searchText,
+    sortType,
+    setSearchText,
+    setSortType,
+    loadMore,
+    refresh,
     getCoverArtUrl,
   };
 }

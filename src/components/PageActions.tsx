@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { LogOut, Menu, RefreshCw, Settings } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useHistory } from "react-router-dom";
+import { useIsDesktop } from "../hooks/useIsDesktop";
 
 interface PageActionsProps {
   onRefresh: () => void;
@@ -22,17 +23,11 @@ const menuItemStyle: React.CSSProperties = {
 };
 
 const PageActions: React.FC<PageActionsProps> = ({ onRefresh }) => {
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  const isDesktop = useIsDesktop();
   const [open, setOpen] = useState(false);
   const { logout } = useAuth();
   const history = useHistory();
   const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -45,10 +40,10 @@ const PageActions: React.FC<PageActionsProps> = ({ onRefresh }) => {
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  if (!isMobile) {
+  if (isDesktop) {
     return (
       <button className="btn-icon" onClick={onRefresh} title="Refresh" aria-label="Refresh">
-        ↻
+        <RefreshCw size={16} />
       </button>
     );
   }

@@ -1,25 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { useHistory } from "react-router-dom";
-import { Song, TrackPreview, QueueEntry, PlayerVariantProps, RepeatMode } from "../../types/player";
+import { Song, QueueEntry, PlayerVariantProps, RepeatMode } from "../../types/player";
 import { useSettings } from "../../contexts/SettingsContext";
 import { useAudioPlayer } from "../../hooks/useAudioPlayer";
+import { useIsDesktop } from "../../hooks/useIsDesktop";
 import PlayerDesktop from "./PlayerDesktop";
 import PlayerMini from "./PlayerMini";
 import PlayerFullscreen from "./PlayerFullscreen";
 import PlayerPanel from "./PlayerPanel";
 import PlayerFloater from "./PlayerFloater";
 
+const FLOATER_POSITION_PREFIX = "floater-";
+
 interface PlayerProps {
   currentSong: Song | null;
   isPlaying: boolean;
-  progress: number;
   onPlayPause: () => void;
   onSeek: (progress: number) => void;
   onNext: () => void;
   onPrevious: () => void;
   onRequestStreamUrl: (songId: string, timeOffset?: number) => string;
-  prevPreview?: TrackPreview;
-  nextPreview?: TrackPreview;
   shuffle: boolean;
   repeatMode: RepeatMode;
   onToggleShuffle: () => void;
@@ -31,83 +31,138 @@ interface PlayerProps {
   sourcePath?: string | null;
 }
 
-const Player: React.FC<PlayerProps> = (props) => {
+const Player: React.FC<PlayerProps> = ({
+  currentSong,
+  isPlaying,
+  onPlayPause,
+  onSeek,
+  onNext,
+  onPrevious,
+  onRequestStreamUrl,
+  shuffle,
+  repeatMode,
+  onToggleShuffle,
+  onToggleRepeat,
+  onStop,
+  queue,
+  currentQueueIndex,
+  onPlayQueueSong,
+  sourcePath,
+}) => {
   const { playerPosition } = useSettings();
   const history = useHistory();
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(() => window.innerWidth >= 768);
+  const isDesktop = useIsDesktop();
 
-  useEffect(() => {
-    const check = () => setIsDesktop(window.innerWidth >= 768);
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
+  const handlePlaybackBlocked = useCallback(() => {
+    if (isPlaying) onPlayPause();
+  }, [isPlaying, onPlayPause]);
 
   const audioState = useAudioPlayer({
-    currentSong: props.currentSong,
-    isPlaying: props.isPlaying,
-    repeatMode: props.repeatMode,
-    onSeek: props.onSeek,
-    onNext: props.onNext,
-    onRequestStreamUrl: props.onRequestStreamUrl,
+    currentSong,
+    isPlaying,
+    repeatMode,
+    onSeek,
+    onNext,
+    onRequestStreamUrl,
+    onPlaybackBlocked: handlePlaybackBlocked,
   });
 
-  if (!props.currentSong) return null;
+  const handleArtClick = useCallback(() => {
+    if (sourcePath) history.push(sourcePath);
+  }, [sourcePath, history]);
+
+  const openFullscreen = useCallback(() => setIsFullscreen(true), []);
+  const closeFullscreen = useCallback(() => setIsFullscreen(false), []);
+
+  const variantProps = useMemo<PlayerVariantProps | null>(() => {
+    if (!currentSong) return null;
+    return {
+      currentSong,
+      isPlaying,
+      isLoading: audioState.isLoading,
+      duration: audioState.duration,
+      currentTime: audioState.currentTime,
+      displayProgress: audioState.displayProgress,
+      volume: audioState.volume,
+      isMuted: audioState.isMuted,
+      isDragging: audioState.isDragging,
+      isVolumeDragging: audioState.isVolumeDragging,
+      shuffle,
+      repeatMode,
+      queue,
+      currentQueueIndex,
+      sourcePath,
+      onPlayPause,
+      onNext,
+      onPrevious,
+      onStop,
+      onToggleShuffle,
+      onToggleRepeat,
+      onToggleMute: audioState.toggleMute,
+      onProgressPointerDown: audioState.handleProgressPointerDown,
+      onVolumePointerDown: audioState.handleVolumePointerDown,
+      volumeWheelRef: audioState.handleVolumeWheel,
+      onPlayQueueSong,
+      formatTime: audioState.formatTime,
+      handleArtClick,
+    };
+  }, [
+    currentSong,
+    isPlaying,
+    shuffle,
+    repeatMode,
+    queue,
+    currentQueueIndex,
+    sourcePath,
+    onPlayPause,
+    onNext,
+    onPrevious,
+    onStop,
+    onToggleShuffle,
+    onToggleRepeat,
+    onPlayQueueSong,
+    handleArtClick,
+    audioState.isLoading,
+    audioState.duration,
+    audioState.currentTime,
+    audioState.displayProgress,
+    audioState.volume,
+    audioState.isMuted,
+    audioState.isDragging,
+    audioState.isVolumeDragging,
+    audioState.toggleMute,
+    audioState.handleProgressPointerDown,
+    audioState.handleVolumePointerDown,
+    audioState.handleVolumeWheel,
+    audioState.formatTime,
+  ]);
+
+  if (!variantProps) return null;
 
   const isPanel = isDesktop && (playerPosition === "left" || playerPosition === "right");
-  const isFloater = isDesktop && playerPosition.startsWith("floater");
-  const floaterCorner = isFloater ? playerPosition.slice("floater-".length) : "";
+  const isFloater = isDesktop && playerPosition.startsWith(FLOATER_POSITION_PREFIX);
+  const floaterCorner = isFloater
+    ? playerPosition.slice(FLOATER_POSITION_PREFIX.length)
+    : "";
 
-  const variantProps: PlayerVariantProps = {
-    currentSong: props.currentSong,
-    isPlaying: props.isPlaying,
-    isLoading: audioState.isLoading,
-    duration: audioState.duration,
-    currentTime: audioState.currentTime,
-    displayProgress: audioState.displayProgress,
-    volume: audioState.volume,
-    isMuted: audioState.isMuted,
-    isDragging: audioState.isDragging,
-    isVolumeDragging: audioState.isVolumeDragging,
-    shuffle: props.shuffle,
-    repeatMode: props.repeatMode,
-    prevPreview: props.prevPreview,
-    nextPreview: props.nextPreview,
-    queue: props.queue,
-    currentQueueIndex: props.currentQueueIndex,
-    sourcePath: props.sourcePath,
-    onPlayPause: props.onPlayPause,
-    onNext: props.onNext,
-    onPrevious: props.onPrevious,
-    onStop: props.onStop,
-    onToggleShuffle: props.onToggleShuffle,
-    onToggleRepeat: props.onToggleRepeat,
-    onToggleMute: audioState.toggleMute,
-    onProgressMouseDown: audioState.handleProgressMouseDown,
-    onVolumeMouseDown: audioState.handleVolumeMouseDown,
-    onVolumeWheel: audioState.handleVolumeWheel,
-    onPlayQueueSong: props.onPlayQueueSong,
-    formatTime: audioState.formatTime,
-    handleArtClick: () => { if (props.sourcePath) history.push(props.sourcePath); },
-  };
+  let variant: React.ReactNode;
+  if (isFloater) {
+    variant = <PlayerFloater {...variantProps} corner={floaterCorner} />;
+  } else if (isPanel) {
+    variant = <PlayerPanel {...variantProps} />;
+  } else if (isDesktop) {
+    variant = <PlayerDesktop {...variantProps} />;
+  } else if (isFullscreen) {
+    variant = <PlayerFullscreen {...variantProps} onClose={closeFullscreen} />;
+  } else {
+    variant = <PlayerMini {...variantProps} onOpenFullscreen={openFullscreen} />;
+  }
 
   return (
     <>
       <audio ref={audioState.audioRef} preload="metadata" />
-
-      {isFloater && <PlayerFloater {...variantProps} corner={floaterCorner} />}
-
-      {!isFloater && (
-        <>
-          {isFullscreen
-            ? <PlayerFullscreen {...variantProps} onClose={() => setIsFullscreen(false)} />
-            : <PlayerMini {...variantProps} onOpenFullscreen={() => setIsFullscreen(true)} />}
-
-          {isPanel && <PlayerPanel {...variantProps} />}
-
-          {!isPanel && !isFullscreen && <PlayerDesktop {...variantProps} />}
-        </>
-      )}
+      {variant}
     </>
   );
 };

@@ -1,21 +1,37 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { SubsonicPlaylist } from "../types/subsonic";
 import { SubsonicService } from "../services/SubsonicService";
 import { getRecentPlaylistIds } from "../utils/recentlyPlayed";
+import { toErrorMessage } from "../utils/errors";
+import { shuffleArray } from "../utils/shuffle";
+import { GRID_PAGE_SIZE } from "../utils/constants";
+import { useCoverArtUrl } from "./useCoverArt";
 
-const PAGE_SIZE = 15;
+export type PlaylistSortType =
+  | "nameAsc"
+  | "nameDesc"
+  | "mostSongs"
+  | "recentlyChanged"
+  | "recentlyPlayed"
+  | "random";
 
-export type PlaylistSortType = "nameAsc" | "nameDesc" | "mostSongs" | "recentlyChanged" | "recentlyPlayed" | "random";
-
-function sortPlaylists(playlists: SubsonicPlaylist[], sort: PlaylistSortType): SubsonicPlaylist[] {
+function sortPlaylists(
+  playlists: SubsonicPlaylist[],
+  sort: PlaylistSortType
+): SubsonicPlaylist[] {
   const sorted = [...playlists];
   switch (sort) {
-    case "nameAsc": return sorted.sort((a, b) => a.name.localeCompare(b.name));
-    case "nameDesc": return sorted.sort((a, b) => b.name.localeCompare(a.name));
-    case "mostSongs": return sorted.sort((a, b) => b.songCount - a.songCount);
+    case "nameAsc":
+      return sorted.sort((a, b) => a.name.localeCompare(b.name));
+    case "nameDesc":
+      return sorted.sort((a, b) => b.name.localeCompare(a.name));
+    case "mostSongs":
+      return sorted.sort((a, b) => b.songCount - a.songCount);
     case "recentlyChanged":
-      return sorted.sort((a, b) =>
-        new Date(b.changed ?? b.created).getTime() - new Date(a.changed ?? a.created).getTime()
+      return sorted.sort(
+        (a, b) =>
+          new Date(b.changed ?? b.created).getTime() -
+          new Date(a.changed ?? a.created).getTime()
       );
     case "recentlyPlayed": {
       const ids = getRecentPlaylistIds();
@@ -26,14 +42,10 @@ function sortPlaylists(playlists: SubsonicPlaylist[], sort: PlaylistSortType): S
         return ai - bi;
       });
     }
-    case "random": {
-      for (let i = sorted.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [sorted[i], sorted[j]] = [sorted[j], sorted[i]];
-      }
+    case "random":
+      return shuffleArray(sorted);
+    default:
       return sorted;
-    }
-    default: return sorted;
   }
 }
 
@@ -43,16 +55,15 @@ export function usePlaylists(
   onError: (msg: string) => void
 ) {
   const onErrorRef = useRef(onError);
-  useEffect(() => { onErrorRef.current = onError; });
+  useEffect(() => {
+    onErrorRef.current = onError;
+  });
 
   const [allPlaylists, setAllPlaylists] = useState<SubsonicPlaylist[]>([]);
-  const [playlists, setPlaylists] = useState<SubsonicPlaylist[]>([]);
-  const [filteredPlaylists, setFilteredPlaylists] = useState<SubsonicPlaylist[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(GRID_PAGE_SIZE);
   const [sortType, setSortType] = useState<PlaylistSortType>("nameAsc");
   const [searchText, setSearchText] = useState("");
-  const offsetRef = useRef(0);
   const loadingRef = useRef(false);
 
   const fetchAllPlaylists = useCallback(async () => {
@@ -60,67 +71,74 @@ export function usePlaylists(
     loadingRef.current = true;
     setLoading(true);
     try {
-      const all = await subsonicService.getPlaylists();
-      setAllPlaylists(all);
+      setAllPlaylists(await subsonicService.getPlaylists());
     } catch (err) {
-      onErrorRef.current(`Failed to load playlists: ${err instanceof Error ? err.message : "Unknown error"}`);
+      onErrorRef.current(`Failed to load playlists: ${toErrorMessage(err)}`);
     } finally {
       setLoading(false);
       loadingRef.current = false;
     }
   }, [subsonicService, isAuthenticated]);
 
-  // Re-sort and reset pagination when source data or sort changes
   useEffect(() => {
-    const sorted = sortPlaylists(allPlaylists, sortType);
-    offsetRef.current = 0;
-    setPlaylists(sorted.slice(0, PAGE_SIZE));
-    setHasMore(sorted.length > PAGE_SIZE);
-  }, [allPlaylists, sortType]);
+    fetchAllPlaylists();
+  }, [fetchAllPlaylists]);
 
-  // Filter displayed playlists by search text
+  // Sorted once per source/sort change so "random" keeps a stable order
+  // across pagination and searches.
+  const sortedPlaylists = useMemo(
+    () => sortPlaylists(allPlaylists, sortType),
+    [allPlaylists, sortType]
+  );
+
   useEffect(() => {
-    const query = searchText.trim().toLowerCase();
-    if (!query) {
-      setFilteredPlaylists(playlists);
-      return;
+    setVisibleCount(GRID_PAGE_SIZE);
+  }, [sortedPlaylists]);
+
+  const query = searchText.trim().toLowerCase();
+  const filteredPlaylists = useMemo(() => {
+    if (query) {
+      return sortedPlaylists.filter((p) => p.name.toLowerCase().includes(query));
     }
-    const sorted = sortPlaylists(allPlaylists, sortType);
-    setFilteredPlaylists(sorted.filter((p) => p.name.toLowerCase().includes(query)));
-  }, [searchText, playlists, allPlaylists, sortType]);
+    return sortedPlaylists.slice(0, visibleCount);
+  }, [sortedPlaylists, query, visibleCount]);
 
   const loadMore = useCallback(() => {
-    const sorted = sortPlaylists(allPlaylists, sortType);
-    const offset = offsetRef.current + PAGE_SIZE;
-    offsetRef.current = offset;
-    setPlaylists((prev) => [...prev, ...sorted.slice(offset, offset + PAGE_SIZE)]);
-    setHasMore(offset + PAGE_SIZE < sorted.length);
-  }, [allPlaylists, sortType]);
+    setVisibleCount((count) => count + GRID_PAGE_SIZE);
+  }, []);
 
-  useEffect(() => { fetchAllPlaylists(); }, []);
+  const createPlaylist = useCallback(
+    async (name: string) => {
+      if (!subsonicService) return;
+      await subsonicService.createPlaylist(name);
+      await fetchAllPlaylists();
+    },
+    [subsonicService, fetchAllPlaylists]
+  );
 
-  const createPlaylist = useCallback(async (name: string) => {
-    if (!subsonicService) return;
-    await subsonicService.createPlaylist(name);
-    await fetchAllPlaylists();
-  }, [subsonicService, fetchAllPlaylists]);
+  const deletePlaylist = useCallback(
+    async (playlist: SubsonicPlaylist) => {
+      if (!subsonicService) return;
+      await subsonicService.deletePlaylist(playlist.id);
+      await fetchAllPlaylists();
+    },
+    [subsonicService, fetchAllPlaylists]
+  );
 
-  const deletePlaylist = useCallback(async (playlist: SubsonicPlaylist) => {
-    if (!subsonicService) return;
-    await subsonicService.deletePlaylist(playlist.id);
-    await fetchAllPlaylists();
-  }, [subsonicService, fetchAllPlaylists]);
-
-  const getCoverArtUrl = useCallback((coverArtId?: string): string => {
-    if (!coverArtId || !subsonicService) return "/assets/default-playlist-art.png";
-    return subsonicService.getCoverArtUrl(coverArtId, 300);
-  }, [subsonicService]);
+  const getCoverArtUrl = useCoverArtUrl(subsonicService);
 
   return {
-    playlists: filteredPlaylists, loading, hasMore: hasMore && !searchText.trim(), sortType, setSortType,
-    searchText, setSearchText,
+    playlists: filteredPlaylists,
+    loading,
+    hasMore: !query && visibleCount < sortedPlaylists.length,
+    sortType,
+    setSortType,
+    searchText,
+    setSearchText,
     loadMore,
     refresh: fetchAllPlaylists,
-    createPlaylist, deletePlaylist, getCoverArtUrl,
+    createPlaylist,
+    deletePlaylist,
+    getCoverArtUrl,
   };
 }

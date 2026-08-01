@@ -9,12 +9,6 @@ export interface Song {
   albumName?: string;
   albumId?: string;
   albumArtUrl?: string;
-  audioUrl: string;
-}
-
-export interface TrackPreview {
-  title: string;
-  artist?: string;
 }
 
 export interface QueueEntry {
@@ -36,8 +30,6 @@ export interface PlayerVariantProps {
   isVolumeDragging: boolean;
   shuffle: boolean;
   repeatMode: RepeatMode;
-  prevPreview?: TrackPreview;
-  nextPreview?: TrackPreview;
   queue?: QueueEntry[];
   currentQueueIndex?: number;
   sourcePath?: string | null;
@@ -48,9 +40,9 @@ export interface PlayerVariantProps {
   onToggleShuffle: () => void;
   onToggleRepeat: () => void;
   onToggleMute: () => void;
-  onProgressMouseDown: (e: React.MouseEvent) => void;
-  onVolumeMouseDown: (e: React.MouseEvent) => void;
-  onVolumeWheel: (e: React.WheelEvent) => void;
+  onProgressPointerDown: (e: React.PointerEvent) => void;
+  onVolumePointerDown: (e: React.PointerEvent) => void;
+  volumeWheelRef: (element: HTMLElement | null) => void;
   onPlayQueueSong?: (index: number) => void;
   formatTime: (seconds: number) => string;
   handleArtClick: () => void;

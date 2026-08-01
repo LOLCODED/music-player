@@ -2,16 +2,23 @@ import React from "react";
 import { createPortal } from "react-dom";
 import { Pause, Play, SkipBack, SkipForward, X } from "lucide-react";
 import { PlayerVariantProps } from "../../types/player";
+import ProgressBar from "./ProgressBar";
+import VolumeBar from "./VolumeBar";
+import Spinner from "./Spinner";
 import { DEFAULT_ALBUM_ART } from "../../utils/defaultArt";
+
+const FLOATER_SPINNER_SIZE = 12;
+const FLOATER_VOLUME_ICON_SIZE = 12;
 
 interface PlayerFloaterProps extends PlayerVariantProps {
   corner: string;
 }
 
 const PlayerFloater: React.FC<PlayerFloaterProps> = ({
-  currentSong, isPlaying, isLoading, displayProgress, volume, isMuted,
-  onPlayPause, onNext, onPrevious, onStop,
-  onVolumeMouseDown, onVolumeWheel,
+  currentSong, isPlaying, isLoading, displayProgress, isDragging,
+  volume, isMuted, isVolumeDragging,
+  onPlayPause, onNext, onPrevious, onStop, onToggleMute,
+  onProgressPointerDown, onVolumePointerDown, volumeWheelRef,
   sourcePath, handleArtClick, corner,
 }) =>
   createPortal(
@@ -40,7 +47,7 @@ const PlayerFloater: React.FC<PlayerFloaterProps> = ({
             <button className="player-play-btn" onClick={onPlayPause} disabled={isLoading}
               aria-label={isPlaying ? "Pause" : "Play"}>
               {isLoading
-                ? <div className="spinner" style={{ width: 12, height: 12, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white" }} />
+                ? <Spinner size={FLOATER_SPINNER_SIZE} />
                 : isPlaying
                 ? <Pause size={14} fill="currentColor" />
                 : <Play size={14} fill="currentColor" style={{ marginLeft: 1 }} />}
@@ -51,18 +58,22 @@ const PlayerFloater: React.FC<PlayerFloaterProps> = ({
           </div>
         </div>
         <div className="player-floater-footer">
-          <div
-            className="volume-bar"
-            style={{ flex: 1 }}
-            onMouseDown={onVolumeMouseDown}
-            onWheel={onVolumeWheel}
-          >
-            <div className="volume-fill" style={{ width: `${(isMuted ? 0 : volume) * 100}%` }} />
-          </div>
+          <VolumeBar
+            volume={volume}
+            isMuted={isMuted}
+            isDragging={isVolumeDragging}
+            iconSize={FLOATER_VOLUME_ICON_SIZE}
+            onToggleMute={onToggleMute}
+            onPointerDown={onVolumePointerDown}
+            wheelRef={volumeWheelRef}
+            barStyle={{ flex: 1 }}
+          />
         </div>
-        <div className="player-floater-progress">
-          <div className="player-floater-progress-fill" style={{ width: `${displayProgress}%` }} />
-        </div>
+        <ProgressBar
+          displayProgress={displayProgress}
+          isDragging={isDragging}
+          onPointerDown={onProgressPointerDown}
+        />
       </div>
     </div>,
     document.body

@@ -1,7 +1,0 @@
-{
-  "name": "music-player",
-  "integrations": {
-    "capacitor": {}
-  },
-  "type": "react-vite"
-}

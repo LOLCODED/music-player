@@ -1,7 +1,13 @@
-import axios from "axios";
 import { SubsonicConfig } from "../config/subsonic";
-import { generateSalt, buildActionUrl } from "./SubsonicBase";
-import { getAlbumList, getAlbum, searchAlbums, getSongs, searchSongs } from "./SubsonicAlbumService";
+import { generateSalt, request, SubsonicError } from "./SubsonicBase";
+import {
+  getAlbumList,
+  getAlbum,
+  searchAlbums,
+  getSongs,
+  searchSongs,
+  AlbumListType,
+} from "./SubsonicAlbumService";
 import { star, unstar, getStarred, StarableType } from "./SubsonicFavoritesService";
 import { getStreamUrl, getCoverArtUrl } from "./SubsonicStreamService";
 import {
@@ -13,26 +19,34 @@ import {
   removeFromPlaylist,
 } from "./SubsonicPlaylistService";
 
-export type { SubsonicAlbum, SubsonicSong, SubsonicPlaylist, SubsonicResponse } from "../types/subsonic";
+export type { SubsonicAlbum, SubsonicSong, SubsonicPlaylist } from "../types/subsonic";
+export type { AlbumListType } from "./SubsonicAlbumService";
+export { SubsonicError } from "./SubsonicBase";
 
 export function createSubsonicService(config: SubsonicConfig) {
+  // One salt per session: the derived token is what the server sees, and a
+  // fresh salt per request would not reduce replayability of a leaked pair.
   const salt = generateSalt();
 
   return {
+    /**
+     * Returns true when the server accepts the credentials, false when the
+     * server explicitly rejects them, and throws on network/timeout errors so
+     * callers can tell "bad password" apart from "server unreachable".
+     */
     ping: async (): Promise<boolean> => {
       try {
-        const url = buildActionUrl(config, salt, "ping");
-        const response = await axios.get(url);
-        return response.data?.["subsonic-response"]?.status === "ok";
-      } catch {
-        return false;
+        await request(config, salt, "ping");
+        return true;
+      } catch (error) {
+        if (error instanceof SubsonicError && error.code !== undefined) {
+          return false;
+        }
+        throw error;
       }
     },
-    getAlbumList: (
-      type?: Parameters<typeof getAlbumList>[2],
-      size?: number,
-      offset?: number
-    ) => getAlbumList(config, salt, type, size, offset),
+    getAlbumList: (type?: AlbumListType, size?: number, offset?: number) =>
+      getAlbumList(config, salt, type, size, offset),
     getAlbum: (id: string) => getAlbum(config, salt, id),
     searchAlbums: (query: string, albumCount?: number, albumOffset?: number) =>
       searchAlbums(config, salt, query, albumCount, albumOffset),

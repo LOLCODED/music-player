@@ -5,34 +5,49 @@ const MAX_PLAYLISTS = 100;
 const SONGS_KEY = "recentlyPlayed:songs";
 const PLAYLISTS_KEY = "recentlyPlayed:playlists";
 
-export function recordSongPlay(song: SubsonicSong): void {
+function readStoredArray(key: string): unknown[] {
   try {
-    const songs = getRecentSongs().filter((s) => s.id !== song.id);
-    songs.unshift(song);
-    localStorage.setItem(SONGS_KEY, JSON.stringify(songs.slice(0, MAX_SONGS)));
-  } catch {}
+    const parsed: unknown = JSON.parse(localStorage.getItem(key) ?? "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeStoredArray(key: string, value: unknown[]): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (err) {
+    if (import.meta.env.DEV) {
+      console.warn(`Could not persist ${key}:`, err);
+    }
+  }
+}
+
+export function recordSongPlay(song: SubsonicSong): void {
+  const songs = getRecentSongs().filter((s) => s.id !== song.id);
+  songs.unshift(song);
+  writeStoredArray(SONGS_KEY, songs.slice(0, MAX_SONGS));
 }
 
 export function recordPlaylistPlay(playlistId: string): void {
-  try {
-    const ids = getRecentPlaylistIds().filter((id) => id !== playlistId);
-    ids.unshift(playlistId);
-    localStorage.setItem(PLAYLISTS_KEY, JSON.stringify(ids.slice(0, MAX_PLAYLISTS)));
-  } catch {}
+  const ids = getRecentPlaylistIds().filter((id) => id !== playlistId);
+  ids.unshift(playlistId);
+  writeStoredArray(PLAYLISTS_KEY, ids.slice(0, MAX_PLAYLISTS));
 }
 
 export function getRecentSongs(): SubsonicSong[] {
-  try {
-    return JSON.parse(localStorage.getItem(SONGS_KEY) ?? "[]");
-  } catch {
-    return [];
-  }
+  return readStoredArray(SONGS_KEY).filter(
+    (item): item is SubsonicSong =>
+      typeof item === "object" &&
+      item !== null &&
+      typeof (item as SubsonicSong).id === "string" &&
+      typeof (item as SubsonicSong).title === "string"
+  );
 }
 
 export function getRecentPlaylistIds(): string[] {
-  try {
-    return JSON.parse(localStorage.getItem(PLAYLISTS_KEY) ?? "[]");
-  } catch {
-    return [];
-  }
+  return readStoredArray(PLAYLISTS_KEY).filter(
+    (item): item is string => typeof item === "string"
+  );
 }

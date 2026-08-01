@@ -1,6 +1,19 @@
-import React, { createContext, useState, useEffect, useContext } from "react";
+import React, {
+  createContext,
+  useState,
+  useEffect,
+  useContext,
+  useCallback,
+  useMemo,
+} from "react";
 import { SubsonicConfig } from "../config/subsonic";
-import { type SubsonicService, createSubsonicService } from "../services/SubsonicService";
+import {
+  type SubsonicService,
+  createSubsonicService,
+} from "../services/SubsonicService";
+import { generateSalt, deriveAuthToken } from "../services/SubsonicBase";
+
+const CONFIG_STORAGE_KEY = "subsonicConfig";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -21,6 +34,35 @@ export const useAuth = () => {
   return context;
 };
 
+// Replace the raw password with a derived token+salt pair so nothing we
+// persist to storage ever contains the password itself.
+function withTokenAuth(config: SubsonicConfig): SubsonicConfig {
+  if (config.token && config.salt) return config;
+  const { token, salt } = deriveAuthToken(config, generateSalt());
+  const { password: _password, ...rest } = config;
+  return { ...rest, token, salt };
+}
+
+function clearStoredConfig(): void {
+  localStorage.removeItem(CONFIG_STORAGE_KEY);
+  sessionStorage.removeItem(CONFIG_STORAGE_KEY);
+}
+
+// sessionStorage first: it holds the current tab's session when the user
+// opted out of "remember me".
+function readStoredConfig(): { config: SubsonicConfig; storage: Storage } | null {
+  for (const storage of [sessionStorage, localStorage]) {
+    const raw = storage.getItem(CONFIG_STORAGE_KEY);
+    if (!raw) continue;
+    try {
+      return { config: JSON.parse(raw) as SubsonicConfig, storage };
+    } catch {
+      storage.removeItem(CONFIG_STORAGE_KEY);
+    }
+  }
+  return null;
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
@@ -32,114 +74,94 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     useState<SubsonicService | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Check for existing session on mount
   useEffect(() => {
+    let cancelled = false;
+
     const initAuth = async () => {
-      setLoading(true);
+      const stored = readStoredConfig();
+      if (!stored) return;
 
-      // Try to get config from localStorage first (for remembered credentials)
-      const localConfig = localStorage.getItem("subsonicConfig");
-
-      // Then try sessionStorage (for session-only credentials)
-      const sessionConfig = sessionStorage.getItem("subsonicConfig");
-
-      let config: SubsonicConfig | null = null;
-
-      if (localConfig) {
-        try {
-          config = JSON.parse(localConfig) as SubsonicConfig;
-        } catch (error) {
-          console.error("Error parsing local config:", error);
-          localStorage.removeItem("subsonicConfig");
-        }
-      } else if (sessionConfig) {
-        try {
-          config = JSON.parse(sessionConfig) as SubsonicConfig;
-        } catch (error) {
-          console.error("Error parsing session config:", error);
-          sessionStorage.removeItem("subsonicConfig");
-        }
+      let config: SubsonicConfig;
+      try {
+        config = withTokenAuth(stored.config);
+      } catch {
+        // Stored config has no usable credentials (legacy format) — discard it.
+        stored.storage.removeItem(CONFIG_STORAGE_KEY);
+        return;
       }
 
-      if (config) {
-        try {
-          const service = createSubsonicService(config);
-
-          // Verify connection is still valid
-          const success = await service.ping();
-
-          if (success) {
-            setSubsonicConfig(config);
-            setSubsonicService(service);
-            setIsAuthenticated(true);
-          } else {
-            // If ping fails, clear storage
-            localStorage.removeItem("subsonicConfig");
-            sessionStorage.removeItem("subsonicConfig");
-          }
-        } catch (error) {
-          console.error("Error initializing auth:", error);
-          localStorage.removeItem("subsonicConfig");
-          sessionStorage.removeItem("subsonicConfig");
+      const service = createSubsonicService(config);
+      try {
+        const valid = await service.ping();
+        if (cancelled) return;
+        if (valid) {
+          // Rewrite storage so legacy password-bearing configs get migrated
+          // to the token+salt format.
+          stored.storage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config));
+          setSubsonicConfig(config);
+          setSubsonicService(service);
+          setIsAuthenticated(true);
+        } else {
+          clearStoredConfig();
         }
+      } catch (error) {
+        // Network/timeout failure: keep stored credentials so a later reload
+        // can retry, but stay logged out for now.
+        console.error("Could not reach server during auth init:", error);
       }
-
-      setLoading(false);
     };
 
-    initAuth();
+    initAuth().finally(() => {
+      if (!cancelled) setLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const login = async (
-    config: SubsonicConfig,
-    rememberMe: boolean = false
-  ): Promise<boolean> => {
-    try {
-      const service = createSubsonicService(config);
-      const success = await service.ping();
+  const login = useCallback(
+    async (config: SubsonicConfig, rememberMe: boolean = false): Promise<boolean> => {
+      try {
+        const authConfig = withTokenAuth(config);
+        const service = createSubsonicService(authConfig);
+        const success = await service.ping();
+        if (!success) return false;
 
-      if (success) {
-        if (rememberMe) {
-          // Save full config to localStorage if remember me is checked
-          localStorage.setItem("subsonicConfig", JSON.stringify(config));
-        } else {
-          // Save config without password to localStorage
-          const savedConfig = { ...config };
-          delete savedConfig.password;
-          localStorage.setItem("subsonicConfig", JSON.stringify(savedConfig));
+        clearStoredConfig();
+        const storage = rememberMe ? localStorage : sessionStorage;
+        storage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(authConfig));
 
-          // Save full config to sessionStorage
-          sessionStorage.setItem("subsonicConfig", JSON.stringify(config));
-        }
-
-        setSubsonicConfig(config);
+        setSubsonicConfig(authConfig);
         setSubsonicService(service);
         setIsAuthenticated(true);
         return true;
+      } catch (error) {
+        console.error("Login error:", error);
+        return false;
       }
-      return false;
-    } catch (error) {
-      console.error("Login error:", error);
-      return false;
-    }
-  };
+    },
+    []
+  );
 
-  const logout = () => {
-    localStorage.removeItem("subsonicConfig");
-    sessionStorage.removeItem("subsonicConfig");
+  const logout = useCallback(() => {
+    clearStoredConfig();
     setIsAuthenticated(false);
     setSubsonicConfig(null);
     setSubsonicService(null);
-  };
+  }, []);
 
-  const value = {
-    isAuthenticated,
-    subsonicConfig,
-    subsonicService,
-    login,
-    logout,
-    loading,
-  };
+  const value = useMemo(
+    () => ({
+      isAuthenticated,
+      subsonicConfig,
+      subsonicService,
+      login,
+      logout,
+      loading,
+    }),
+    [isAuthenticated, subsonicConfig, subsonicService, login, logout, loading]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

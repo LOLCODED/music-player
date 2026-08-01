@@ -1,26 +1,15 @@
-import axios from "axios";
 import { SubsonicConfig } from "../config/subsonic";
-import { SubsonicPlaylist, SubsonicSong, SubsonicResponse } from "../types/subsonic";
-import { buildActionUrl } from "./SubsonicBase";
+import { SubsonicPlaylist, SubsonicSong } from "../types/subsonic";
+import { request, toArray, SubsonicError } from "./SubsonicBase";
 
 export async function getPlaylists(
   config: SubsonicConfig,
   salt: string
 ): Promise<SubsonicPlaylist[]> {
-  const url = buildActionUrl(config, salt, "getPlaylists");
-  const response = await axios.get<
-    SubsonicResponse<{ playlists: { playlist: SubsonicPlaylist[] } }>
-  >(url);
-
-  if (response.data["subsonic-response"].status === "ok") {
-    const playlists =
-      response.data["subsonic-response"].playlists?.playlist || [];
-    return Array.isArray(playlists) ? playlists : [playlists];
-  }
-  throw new Error(
-    response.data["subsonic-response"].error?.message ||
-      "Failed to get playlists"
-  );
+  const data = await request<{
+    playlists: { playlist?: SubsonicPlaylist | SubsonicPlaylist[] };
+  }>(config, salt, "getPlaylists");
+  return toArray(data.playlists?.playlist);
 }
 
 export async function getPlaylist(
@@ -28,19 +17,14 @@ export async function getPlaylist(
   salt: string,
   id: string
 ): Promise<{ playlist: SubsonicPlaylist; songs: SubsonicSong[] }> {
-  const url = `${buildActionUrl(config, salt, "getPlaylist")}&id=${encodeURIComponent(id)}`;
-  const response = await axios.get<
-    SubsonicResponse<{ playlist: SubsonicPlaylist & { entry: SubsonicSong[] } }>
-  >(url);
-
-  if (response.data["subsonic-response"].status === "ok") {
-    const playlistData = response.data["subsonic-response"].playlist;
-    return { playlist: playlistData, songs: playlistData.entry || [] };
+  const data = await request<{
+    playlist: SubsonicPlaylist & { entry?: SubsonicSong | SubsonicSong[] };
+  }>(config, salt, "getPlaylist", { id });
+  if (!data.playlist) {
+    throw new SubsonicError("Playlist not found");
   }
-  throw new Error(
-    response.data["subsonic-response"].error?.message ||
-      "Failed to get playlist details"
-  );
+  const { entry, ...playlist } = data.playlist;
+  return { playlist, songs: toArray(entry) };
 }
 
 export async function createPlaylist(
@@ -49,22 +33,16 @@ export async function createPlaylist(
   name: string,
   songIds?: string[]
 ): Promise<string> {
-  let url = `${buildActionUrl(config, salt, "createPlaylist")}&name=${encodeURIComponent(name)}`;
-  if (songIds && songIds.length > 0) {
-    url += `&songId=${songIds.map(encodeURIComponent).join("&songId=")}`;
-  }
-
-  const response = await axios.get<
-    SubsonicResponse<{ playlist: { id: string } }>
-  >(url);
-
-  if (response.data["subsonic-response"].status === "ok") {
-    return response.data["subsonic-response"].playlist.id;
-  }
-  throw new Error(
-    response.data["subsonic-response"].error?.message ||
-      "Failed to create playlist"
+  const data = await request<{ playlist: { id: string } }>(
+    config,
+    salt,
+    "createPlaylist",
+    { name, songId: songIds }
   );
+  if (!data.playlist?.id) {
+    throw new SubsonicError("Server did not return the created playlist");
+  }
+  return data.playlist.id;
 }
 
 export async function deletePlaylist(
@@ -72,15 +50,7 @@ export async function deletePlaylist(
   salt: string,
   id: string
 ): Promise<void> {
-  const url = `${buildActionUrl(config, salt, "deletePlaylist")}&id=${encodeURIComponent(id)}`;
-  const response = await axios.get<SubsonicResponse<{}>>(url);
-
-  if (response.data["subsonic-response"].status !== "ok") {
-    throw new Error(
-      response.data["subsonic-response"].error?.message ||
-        "Failed to delete playlist"
-    );
-  }
+  await request(config, salt, "deletePlaylist", { id });
 }
 
 export async function addToPlaylist(
@@ -89,18 +59,10 @@ export async function addToPlaylist(
   playlistId: string,
   songIds: string[]
 ): Promise<void> {
-  const url =
-    `${buildActionUrl(config, salt, "updatePlaylist")}` +
-    `&playlistId=${encodeURIComponent(playlistId)}` +
-    `&songIdToAdd=${songIds.map(encodeURIComponent).join("&songIdToAdd=")}`;
-  const response = await axios.get<SubsonicResponse<{}>>(url);
-
-  if (response.data["subsonic-response"].status !== "ok") {
-    throw new Error(
-      response.data["subsonic-response"].error?.message ||
-        "Failed to add songs to playlist"
-    );
-  }
+  await request(config, salt, "updatePlaylist", {
+    playlistId,
+    songIdToAdd: songIds,
+  });
 }
 
 export async function removeFromPlaylist(
@@ -109,16 +71,8 @@ export async function removeFromPlaylist(
   playlistId: string,
   songIndexesToRemove: number[]
 ): Promise<void> {
-  const url =
-    `${buildActionUrl(config, salt, "updatePlaylist")}` +
-    `&playlistId=${encodeURIComponent(playlistId)}` +
-    `&songIndexToRemove=${songIndexesToRemove.join("&songIndexToRemove=")}`;
-  const response = await axios.get<SubsonicResponse<{}>>(url);
-
-  if (response.data["subsonic-response"].status !== "ok") {
-    throw new Error(
-      response.data["subsonic-response"].error?.message ||
-        "Failed to remove songs from playlist"
-    );
-  }
+  await request(config, salt, "updatePlaylist", {
+    playlistId,
+    songIndexToRemove: songIndexesToRemove,
+  });
 }

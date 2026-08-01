@@ -2,7 +2,15 @@ import React, { useRef } from "react";
 import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { PlayerVariantProps } from "../../types/player";
 import ProgressBar from "./ProgressBar";
+import Spinner from "./Spinner";
 import { DEFAULT_ALBUM_ART } from "../../utils/defaultArt";
+
+// Swipe right past this distance closes the player.
+const SWIPE_CLOSE_THRESHOLD_PX = 60;
+// Swipe up past this distance (negative dy) opens the fullscreen player.
+const SWIPE_OPEN_THRESHOLD_PX = -40;
+
+const PROGRESS_STYLE: React.CSSProperties = { margin: "0 2px" };
 
 interface PlayerMiniProps extends PlayerVariantProps {
   onOpenFullscreen: () => void;
@@ -11,7 +19,7 @@ interface PlayerMiniProps extends PlayerVariantProps {
 const PlayerMini: React.FC<PlayerMiniProps> = ({
   currentSong, isPlaying, isLoading, displayProgress, isDragging,
   onPlayPause, onNext, onPrevious, onStop,
-  onProgressMouseDown, sourcePath, handleArtClick, onOpenFullscreen,
+  onProgressPointerDown, sourcePath, handleArtClick, onOpenFullscreen,
 }) => {
   const touchStart = useRef({ x: 0, y: 0 });
 
@@ -20,15 +28,19 @@ const PlayerMini: React.FC<PlayerMiniProps> = ({
       className="player-mini"
       onClick={onOpenFullscreen}
       onTouchStart={(e) => {
-        touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        const touch = e.touches[0];
+        if (!touch) return;
+        touchStart.current = { x: touch.clientX, y: touch.clientY };
       }}
       onTouchEnd={(e) => {
-        const dx = e.changedTouches[0].clientX - touchStart.current.x;
-        const dy = e.changedTouches[0].clientY - touchStart.current.y;
+        const touch = e.changedTouches[0];
+        if (!touch) return;
+        const dx = touch.clientX - touchStart.current.x;
+        const dy = touch.clientY - touchStart.current.y;
         if (Math.abs(dx) > Math.abs(dy)) {
-          if (dx > 60) onStop();
+          if (dx > SWIPE_CLOSE_THRESHOLD_PX) onStop();
         } else {
-          if (dy < -40) onOpenFullscreen();
+          if (dy < SWIPE_OPEN_THRESHOLD_PX) onOpenFullscreen();
         }
       }}
     >
@@ -51,7 +63,7 @@ const PlayerMini: React.FC<PlayerMiniProps> = ({
         <button className="player-play-btn" onClick={(e) => { e.stopPropagation(); onPlayPause(); }}
           disabled={isLoading} aria-label={isPlaying ? "Pause" : "Play"}>
           {isLoading
-            ? <div className="spinner" style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white" }} />
+            ? <Spinner />
             : isPlaying
             ? <Pause size={16} fill="currentColor" />
             : <Play size={16} fill="currentColor" style={{ marginLeft: 1 }} />}
@@ -62,7 +74,9 @@ const PlayerMini: React.FC<PlayerMiniProps> = ({
       </div>
 
       <ProgressBar displayProgress={displayProgress} isDragging={isDragging}
-        onMouseDown={onProgressMouseDown} style={{ margin: "0 2px" }} />
+        onPointerDown={onProgressPointerDown}
+        onClick={(e) => e.stopPropagation()}
+        style={PROGRESS_STYLE} />
     </div>
   );
 };

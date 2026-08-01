@@ -10,7 +10,5 @@ export function buildPseudoAlbum(playlist: SubsonicPlaylist): SubsonicAlbum {
     songCount: playlist.songCount,
     duration: playlist.duration,
     created: playlist.created,
-    year: 0,
-    genre: "",
   };
 }

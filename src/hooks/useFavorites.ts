@@ -1,6 +1,8 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { SubsonicSong, SubsonicAlbum } from "../types/subsonic";
 import { SubsonicService } from "../services/SubsonicService";
+import { toErrorMessage } from "../utils/errors";
+import { useCoverArtUrl } from "./useCoverArt";
 
 export type FavoritesSection = "songs" | "albums";
 
@@ -11,7 +13,7 @@ export function useFavorites(subsonicService: SubsonicService | null) {
   const [error, setError] = useState("");
   const [searchText, setSearchText] = useState("");
 
-  const fetch = useCallback(async () => {
+  const loadFavorites = useCallback(async () => {
     if (!subsonicService) return;
     setLoading(true);
     setError("");
@@ -20,55 +22,73 @@ export function useFavorites(subsonicService: SubsonicService | null) {
       setAllSongs(songs);
       setAllAlbums(albums);
     } catch (err) {
-      setError(`Failed to load favorites: ${err instanceof Error ? err.message : "Unknown error"}`);
+      setError(`Failed to load favorites: ${toErrorMessage(err)}`);
     } finally {
       setLoading(false);
     }
   }, [subsonicService]);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => {
+    loadFavorites();
+  }, [loadFavorites]);
 
-  const unstarSong = useCallback(async (id: string) => {
-    if (!subsonicService) return;
-    await subsonicService.unstar(id, "song");
-    setAllSongs((prev) => prev.filter((s) => s.id !== id));
-  }, [subsonicService]);
+  const unstarSong = useCallback(
+    async (id: string) => {
+      if (!subsonicService) return;
+      await subsonicService.unstar(id, "song");
+      setAllSongs((prev) => prev.filter((s) => s.id !== id));
+    },
+    [subsonicService]
+  );
 
-  const unstarAlbum = useCallback(async (id: string) => {
-    if (!subsonicService) return;
-    await subsonicService.unstar(id, "album");
-    setAllAlbums((prev) => prev.filter((a) => a.id !== id));
-  }, [subsonicService]);
+  const unstarAlbum = useCallback(
+    async (id: string) => {
+      if (!subsonicService) return;
+      await subsonicService.unstar(id, "album");
+      setAllAlbums((prev) => prev.filter((a) => a.id !== id));
+    },
+    [subsonicService]
+  );
 
-  const getCoverArtUrl = useCallback((coverArtId?: string): string => {
-    if (!coverArtId || !subsonicService) return "/assets/default-playlist-art.png";
-    return subsonicService.getCoverArtUrl(coverArtId, 300);
-  }, [subsonicService]);
+  const getCoverArtUrl = useCoverArtUrl(subsonicService);
 
   const query = searchText.trim().toLowerCase();
 
-  const filteredSongs = query
-    ? allSongs.filter((s) =>
-        s.title.toLowerCase().includes(query) ||
-        s.artist.toLowerCase().includes(query) ||
-        s.album.toLowerCase().includes(query)
-      )
-    : allSongs;
+  const filteredSongs = useMemo(
+    () =>
+      query
+        ? allSongs.filter(
+            (s) =>
+              s.title.toLowerCase().includes(query) ||
+              s.artist.toLowerCase().includes(query) ||
+              s.album.toLowerCase().includes(query)
+          )
+        : allSongs,
+    [allSongs, query]
+  );
 
-  const filteredAlbums = query
-    ? allAlbums.filter((a) =>
-        a.name.toLowerCase().includes(query) ||
-        a.artist.toLowerCase().includes(query)
-      )
-    : allAlbums;
+  const filteredAlbums = useMemo(
+    () =>
+      query
+        ? allAlbums.filter(
+            (a) =>
+              a.name.toLowerCase().includes(query) ||
+              a.artist.toLowerCase().includes(query)
+          )
+        : allAlbums,
+    [allAlbums, query]
+  );
 
   return {
     songs: filteredSongs,
     albums: filteredAlbums,
-    loading, error,
-    searchText, setSearchText,
-    unstarSong, unstarAlbum,
-    refresh: fetch,
+    loading,
+    error,
+    searchText,
+    setSearchText,
+    unstarSong,
+    unstarAlbum,
+    refresh: loadFavorites,
     getCoverArtUrl,
   };
 }

@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Trash2 } from "lucide-react";
-import { SubsonicConfig } from "../config/subsonic";
+import { SubsonicConfig, APP_NAME, API_VERSION } from "../config/subsonic";
 import { useHistory } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useToast } from "../hooks/useToast";
+import Modal from "../components/Modal";
+import Toast from "../components/Toast";
 
 interface SavedCredential extends SubsonicConfig {
   id: string;
@@ -13,39 +16,39 @@ const LoginPage: React.FC = () => {
   const [serverUrl, setServerUrl] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [appName, setAppName] = useState("CascadeMusicPlayer");
-  const [apiVersion, setApiVersion] = useState("1.16.1");
-  const [toast, setToast] = useState("");
+  const [appName, setAppName] = useState(APP_NAME);
+  const [apiVersion, setApiVersion] = useState(API_VERSION);
   const [loading, setLoading] = useState(false);
   const [savedCredentials, setSavedCredentials] = useState<SavedCredential[]>([]);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [saveName, setSaveName] = useState("");
-  const [currentConfig, setCurrentConfig] = useState<SubsonicConfig | null>(null);
 
   const history = useHistory();
-  const { login } = useAuth();
-
-  const showToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(""), 3000);
-  };
+  const { toast, showToast } = useToast();
+  // subsonicConfig holds the token+salt form of the credentials after a
+  // successful login, so saved servers never contain the raw password.
+  const { login, subsonicConfig } = useAuth();
 
   useEffect(() => {
     const saved = localStorage.getItem("savedCredentials");
-    if (saved) {
-      try { setSavedCredentials(JSON.parse(saved)); } catch {}
+    if (!saved) return;
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) setSavedCredentials(parsed);
+    } catch {
+      showToast("Could not load saved servers");
     }
-  }, []);
+  }, [showToast]);
 
   const handleSaveCredential = () => {
-    if (!currentConfig || !saveName.trim()) {
+    if (!subsonicConfig || !saveName.trim()) {
       showToast("Please enter a name for the server");
       return;
     }
     const newCredential: SavedCredential = {
       id: Date.now().toString(),
+      ...subsonicConfig,
       name: saveName.trim(),
-      ...currentConfig,
     };
     const updated = [...savedCredentials, newCredential];
     localStorage.setItem("savedCredentials", JSON.stringify(updated));
@@ -78,7 +81,8 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  const handleLogin = async () => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!serverUrl || !username || !password) {
       showToast("Please fill in all required fields");
       return;
@@ -94,7 +98,6 @@ const LoginPage: React.FC = () => {
       };
       const success = await login(config, false);
       if (success) {
-        setCurrentConfig(config);
         setSaveName("");
         setShowSaveDialog(true);
       } else {
@@ -105,6 +108,11 @@ const LoginPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSkipSave = () => {
+    setShowSaveDialog(false);
+    history.replace("/albums");
   };
 
   return (
@@ -140,92 +148,91 @@ const LoginPage: React.FC = () => {
           </div>
         )}
 
-        <div className="login-card">
+        <form className="login-card" onSubmit={handleLogin}>
           <div className="login-field">
-            <label>Server URL *</label>
+            <label htmlFor="login-server-url">Server URL *</label>
             <input
+              id="login-server-url"
               type="url"
               value={serverUrl}
               onChange={e => setServerUrl(e.target.value)}
               placeholder="http://your-server.com:4040"
-              onKeyDown={e => e.key === "Enter" && handleLogin()}
             />
           </div>
           <div className="login-field">
-            <label>Username *</label>
+            <label htmlFor="login-username">Username *</label>
             <input
+              id="login-username"
               type="text"
               value={username}
               onChange={e => setUsername(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && handleLogin()}
             />
           </div>
           <div className="login-field">
-            <label>Password *</label>
+            <label htmlFor="login-password">Password *</label>
             <input
+              id="login-password"
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && handleLogin()}
             />
           </div>
           <div className="login-field">
-            <label>App Name</label>
+            <label htmlFor="login-app-name">App Name</label>
             <input
+              id="login-app-name"
               type="text"
               value={appName}
               onChange={e => setAppName(e.target.value)}
             />
           </div>
           <div className="login-field">
-            <label>API Version</label>
+            <label htmlFor="login-api-version">API Version</label>
             <input
+              id="login-api-version"
               type="text"
               value={apiVersion}
               onChange={e => setApiVersion(e.target.value)}
             />
           </div>
           <button
+            type="submit"
             className="btn btn-primary"
-            onClick={handleLogin}
             disabled={loading}
             style={{ width: "100%", justifyContent: "center" }}
           >
             {loading ? <><div className="spinner" style={{ width: 14, height: 14, borderColor: "rgba(255,255,255,0.3)", borderTopColor: "white" }} /> Connecting...</> : "Login"}
           </button>
-        </div>
+        </form>
       </div>
 
-      {/* Save credentials dialog */}
       {showSaveDialog && (
-        <div className="modal-overlay">
-          <div className="modal-box">
-            <h3>Connection Successful</h3>
-            <p>Save these credentials for future use?</p>
+        <Modal title="Connection Successful" onClose={handleSkipSave}>
+          <p>Save these credentials for future use?</p>
+          <form
+            className="modal-form"
+            onSubmit={e => { e.preventDefault(); handleSaveCredential(); }}
+          >
             <input
               type="text"
               placeholder="Server name (e.g. Home Server)"
+              aria-label="Server name"
               value={saveName}
               onChange={e => setSaveName(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && handleSaveCredential()}
-              autoFocus
             />
             <div className="modal-actions">
-              <button
-                className="btn"
-                onClick={() => { setShowSaveDialog(false); history.replace("/albums"); }}
-              >
+              <button type="button" className="btn" onClick={handleSkipSave}>
                 Skip
               </button>
-              <button className="btn btn-primary" onClick={handleSaveCredential}>
+              <button type="submit" className="btn btn-primary">
                 Save
               </button>
             </div>
-          </div>
-        </div>
+          </form>
+        </Modal>
       )}
 
-      {toast && <div className="toast">{toast}</div>}
+      <Toast message={toast} />
     </div>
   );
 };

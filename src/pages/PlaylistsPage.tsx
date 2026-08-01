@@ -1,246 +1,193 @@
 import React, { useState } from "react";
-import { LayoutGrid, List, Play, Plus, Trash2, X } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useHistory } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { useMusicPlayer } from "../contexts/MusicPlayerContext";
 import { SubsonicPlaylist } from "../types/subsonic";
 import { buildPseudoAlbum } from "../utils/playlist";
-import { usePlaylists } from "../hooks/usePlaylists";
+import { usePlaylists, PlaylistSortType } from "../hooks/usePlaylists";
 import { useViewMode } from "../hooks/useViewMode";
+import { useToast } from "../hooks/useToast";
+import { useShufflePlay } from "../hooks/useShufflePlay";
+import { formatTotalDuration } from "../utils/duration";
+import { toErrorMessage } from "../utils/errors";
 import ScrollSentinel from "../components/ScrollSentinel";
-import PageActions from "../components/PageActions";
+import ListPageHeader from "../components/ListPageHeader";
+import CenteredSpinner from "../components/CenteredSpinner";
+import MediaCard from "../components/MediaCard";
+import MediaTable, { MediaTableHeader } from "../components/MediaTable";
+import MediaTableRow from "../components/MediaTableRow";
+import ConfirmDialog from "../components/ConfirmDialog";
+import CreatePlaylistDialog from "../components/CreatePlaylistDialog";
+import Toast from "../components/Toast";
+
+const SORT_OPTIONS = [
+  { value: "nameAsc", label: "Name A-Z" },
+  { value: "nameDesc", label: "Name Z-A" },
+  { value: "mostSongs", label: "Most Songs" },
+  { value: "recentlyPlayed", label: "Recently Played" },
+  { value: "recentlyChanged", label: "Recently Changed" },
+  { value: "random", label: "Random" },
+];
+
+const TABLE_HEADERS: MediaTableHeader[] = [
+  { label: "Name" },
+  { label: "Songs" },
+  { label: "Duration" },
+];
 
 const PlaylistsPage: React.FC = () => {
   const { subsonicService, isAuthenticated } = useAuth();
-  const { playAlbum, shuffle, toggleShuffle } = useMusicPlayer();
   const history = useHistory();
-
-  const [toast, setToast] = useState("");
   const [viewMode, setViewMode] = useViewMode("viewMode:playlists");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [newPlaylistName, setNewPlaylistName] = useState("");
   const [playlistToDelete, setPlaylistToDelete] = useState<SubsonicPlaylist | null>(null);
+  const { toast, showToast } = useToast();
+  const shufflePlay = useShufflePlay(showToast);
 
-  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(""), 3000); };
+  const {
+    playlists, loading, hasMore, sortType, setSortType,
+    searchText, setSearchText, loadMore, refresh,
+    createPlaylist, deletePlaylist, getCoverArtUrl,
+  } = usePlaylists(subsonicService, isAuthenticated, showToast);
 
-  const { playlists, loading, hasMore, sortType, setSortType, searchText, setSearchText, loadMore, refresh, createPlaylist, deletePlaylist, getCoverArtUrl } =
-    usePlaylists(subsonicService, isAuthenticated, showToast);
-
-  const handleCreate = async () => {
-    if (!newPlaylistName.trim()) return;
+  const handleCreate = async (name: string) => {
     try {
-      await createPlaylist(newPlaylistName.trim());
-      setNewPlaylistName("");
+      await createPlaylist(name);
       setShowCreateDialog(false);
       showToast("Playlist created");
     } catch (err) {
-      showToast(`Failed to create playlist: ${err instanceof Error ? err.message : "Unknown error"}`);
+      showToast(`Failed to create playlist: ${toErrorMessage(err)}`);
     }
   };
 
   const handleDelete = async (playlist: SubsonicPlaylist) => {
+    setPlaylistToDelete(null);
     try {
       await deletePlaylist(playlist);
       showToast("Playlist deleted");
     } catch (err) {
-      showToast(`Failed to delete playlist: ${err instanceof Error ? err.message : "Unknown error"}`);
+      showToast(`Failed to delete playlist: ${toErrorMessage(err)}`);
     }
   };
 
-  const handlePlay = async (playlist: SubsonicPlaylist, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handlePlay = (playlist: SubsonicPlaylist) => {
     if (!subsonicService) return;
-    try {
+    shufflePlay(async () => {
       const data = await subsonicService.getPlaylist(playlist.id);
-      if (data.songs.length > 0) {
-        if (!shuffle) toggleShuffle();
-        const randomIndex = Math.floor(Math.random() * data.songs.length);
-        playAlbum(buildPseudoAlbum(playlist), data.songs, randomIndex);
-      }
-    } catch (err) {
-      showToast(`Failed to play playlist: ${err instanceof Error ? err.message : "Unknown error"}`);
-    }
+      return { album: buildPseudoAlbum(playlist), songs: data.songs };
+    });
   };
 
-  const formatDuration = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-  };
+  const openPlaylist = (playlist: SubsonicPlaylist) =>
+    history.push(`/playlist/${playlist.id}`);
 
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", minHeight: 0 }}>
-      <div className="page-header">
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1 }}>
-          <input
-            type="search"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            placeholder="Search playlists..."
-            style={{ flex: 1, maxWidth: 360 }}
-          />
-          <select
-            value={sortType}
-            onChange={(e) => setSortType(e.target.value as typeof sortType)}
-            style={{ width: "auto", minWidth: 150, flexShrink: 0 }}
-          >
-            <option value="nameAsc">Name A-Z</option>
-            <option value="nameDesc">Name Z-A</option>
-            <option value="mostSongs">Most Songs</option>
-            <option value="recentlyPlayed">Recently Played</option>
-            <option value="recentlyChanged">Recently Changed</option>
-            <option value="random">Random</option>
-          </select>
+    <div className="page">
+      <ListPageHeader
+        searchText={searchText}
+        onSearchChange={setSearchText}
+        placeholder="Search playlists..."
+        sortOptions={SORT_OPTIONS}
+        sortType={sortType}
+        onSortChange={(value) => setSortType(value as PlaylistSortType)}
+        viewMode={viewMode}
+        onToggleView={() => setViewMode((v) => (v === "grid" ? "table" : "grid"))}
+        onRefresh={refresh}
+        extra={
           <button
             className="btn-icon"
-            onClick={() => setViewMode((v) => v === "grid" ? "table" : "grid")}
-            title={viewMode === "grid" ? "Switch to list view" : "Switch to grid view"}
-            aria-label="Toggle view"
+            onClick={() => setShowCreateDialog(true)}
+            aria-label="Create playlist"
+            title="Create playlist"
           >
-            {viewMode === "grid" ? <List size={16} /> : <LayoutGrid size={16} />}
+            <Plus size={18} />
           </button>
-        </div>
-        <button className="btn-icon" onClick={() => setShowCreateDialog(true)} aria-label="Create playlist" title="Create playlist">
-          <Plus size={18} />
-        </button>
-        <PageActions onRefresh={refresh} />
-      </div>
+        }
+      />
 
       <div className="page-scroll">
         {loading && playlists.length === 0 ? (
-          <div style={{ display: "flex", justifyContent: "center", padding: 32 }}><div className="spinner" /></div>
+          <CenteredSpinner />
         ) : playlists.length === 0 ? (
-          <div style={{ padding: 32, textAlign: "center", color: "var(--fg-muted)" }}>
-            <p style={{ marginBottom: 12 }}>No playlists yet</p>
+          <div className="empty-state">
+            <p>No playlists yet</p>
             <button className="btn btn-primary" onClick={() => setShowCreateDialog(true)}>
               <Plus size={14} /> Create Playlist
             </button>
           </div>
-        ) : viewMode === "grid" ? (
-          <>
-            <div className="album-grid">
-              {playlists.map((playlist) => (
-                <div key={playlist.id} className="album-card" onClick={() => history.push(`/playlist/${playlist.id}`)}>
-                  <img
-                    src={getCoverArtUrl(playlist.coverArt)}
-                    alt={playlist.name}
-                    onError={(e) => { (e.target as HTMLImageElement).src = "/assets/default-playlist-art.png"; }}
-                  />
-                  <button className="album-card-play" onClick={(e) => handlePlay(playlist, e)} aria-label={`Play ${playlist.name}`}>
-                    <Play size={13} style={{ marginLeft: 1 }} fill="currentColor" />
-                  </button>
-                  <div className="album-card-info">
-                    <div className="album-card-title">{playlist.name}</div>
-                    <div className="album-card-artist">{playlist.songCount} songs · {formatDuration(playlist.duration)}</div>
-                  </div>
-                  <button
-                    className="btn-icon"
-                    style={{ position: "absolute", bottom: 48, right: 4, opacity: 0, transition: "opacity 0.15s" }}
-                    onClick={(e) => { e.stopPropagation(); setPlaylistToDelete(playlist); }}
-                    aria-label="Delete playlist"
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = "0"; }}
-                  >
-                    <Trash2 size={12} />
-                  </button>
-                </div>
-              ))}
-            </div>
-            <ScrollSentinel onVisible={loadMore} hasMore={hasMore} loading={loading} itemCount={playlists.length} />
-          </>
         ) : (
           <>
-            <table className="content-table">
-              <thead>
-                <tr>
-                  <th style={{ paddingLeft: 28 }}>Name</th>
-                  <th>Songs</th>
-                  <th>Duration</th>
-                  <th style={{ width: 1 }} />
-                </tr>
-              </thead>
-              <tbody>
+            {viewMode === "grid" ? (
+              <div className="album-grid">
                 {playlists.map((playlist) => (
-                  <tr
+                  <MediaCard
                     key={playlist.id}
-                    className="content-table-row"
-                    onClick={() => history.push(`/playlist/${playlist.id}`)}
-                  >
-                    <td className="content-table-name">
-                      <div className="content-table-name-cell">
-                        <button
-                          className="table-play-btn"
-                          onClick={(e) => handlePlay(playlist, e)}
-                          aria-label={`Play ${playlist.name}`}
-                        >
-                          <Play size={11} fill="currentColor" />
-                        </button>
-                        {playlist.name}
-                      </div>
-                    </td>
-                    <td className="content-table-sub">{playlist.songCount}</td>
-                    <td className="content-table-sub">{formatDuration(playlist.duration)}</td>
-                    <td>
-                      <div>
-                        <button
-                          className="btn-icon table-delete-btn"
-                          onClick={(e) => { e.stopPropagation(); setPlaylistToDelete(playlist); }}
-                          aria-label="Delete playlist"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                    imageUrl={getCoverArtUrl(playlist.coverArt)}
+                    title={playlist.name}
+                    subtitle={`${playlist.songCount} songs · ${formatTotalDuration(playlist.duration)}`}
+                    onClick={() => openPlaylist(playlist)}
+                    onPlay={() => handlePlay(playlist)}
+                    onDelete={() => setPlaylistToDelete(playlist)}
+                  />
                 ))}
-              </tbody>
-            </table>
-            <ScrollSentinel onVisible={loadMore} hasMore={hasMore} loading={loading} itemCount={playlists.length} />
+              </div>
+            ) : (
+              <MediaTable headers={TABLE_HEADERS}>
+                {playlists.map((playlist) => (
+                  <MediaTableRow
+                    key={playlist.id}
+                    title={playlist.name}
+                    cells={[
+                      String(playlist.songCount),
+                      formatTotalDuration(playlist.duration),
+                    ]}
+                    onClick={() => openPlaylist(playlist)}
+                    onPlay={() => handlePlay(playlist)}
+                    trailingAction={
+                      <button
+                        className="btn-icon table-delete-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPlaylistToDelete(playlist);
+                        }}
+                        aria-label="Delete playlist"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    }
+                  />
+                ))}
+              </MediaTable>
+            )}
+            <ScrollSentinel
+              onVisible={loadMore}
+              hasMore={hasMore}
+              loading={loading}
+              itemCount={playlists.length}
+            />
           </>
         )}
       </div>
 
       {showCreateDialog && (
-        <div className="modal-overlay">
-          <div className="modal-box">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3>Create New Playlist</h3>
-              <button className="btn-icon" onClick={() => setShowCreateDialog(false)}><X size={16} /></button>
-            </div>
-            <input
-              type="text" placeholder="Playlist name" value={newPlaylistName}
-              onChange={(e) => setNewPlaylistName(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-              autoFocus
-            />
-            <div className="modal-actions">
-              <button className="btn" onClick={() => { setShowCreateDialog(false); setNewPlaylistName(""); }}>Cancel</button>
-              <button className="btn btn-primary" onClick={handleCreate}>Create</button>
-            </div>
-          </div>
-        </div>
+        <CreatePlaylistDialog
+          onSubmit={handleCreate}
+          onClose={() => setShowCreateDialog(false)}
+        />
       )}
 
       {playlistToDelete && (
-        <div className="modal-overlay">
-          <div className="modal-box">
-            <h3>Delete Playlist</h3>
-            <p>Are you sure you want to delete "{playlistToDelete.name}"?</p>
-            <div className="modal-actions">
-              <button className="btn" onClick={() => setPlaylistToDelete(null)}>Cancel</button>
-              <button
-                className="btn"
-                style={{ background: "var(--error)", borderColor: "var(--error)", color: "white" }}
-                onClick={() => { handleDelete(playlistToDelete); setPlaylistToDelete(null); }}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          title="Delete Playlist"
+          message={`Are you sure you want to delete "${playlistToDelete.name}"?`}
+          confirmLabel="Delete"
+          destructive
+          onConfirm={() => handleDelete(playlistToDelete)}
+          onCancel={() => setPlaylistToDelete(null)}
+        />
       )}
 
-      {toast && <div className="toast">{toast}</div>}
+      <Toast message={toast} />
     </div>
   );
 };

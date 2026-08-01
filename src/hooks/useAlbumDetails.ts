@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { SubsonicAlbum, SubsonicPlaylist, SubsonicSong } from "../types/subsonic";
 import { SubsonicService } from "../services/SubsonicService";
-import { DEFAULT_ALBUM_ART } from "../utils/defaultArt";
+import { toErrorMessage } from "../utils/errors";
+import { useCoverArtUrl } from "./useCoverArt";
 
 export function useAlbumDetails(
   id: string,
@@ -9,7 +10,9 @@ export function useAlbumDetails(
   onError: (msg: string) => void
 ) {
   const onErrorRef = useRef(onError);
-  useEffect(() => { onErrorRef.current = onError; });
+  useEffect(() => {
+    onErrorRef.current = onError;
+  });
 
   const [album, setAlbum] = useState<SubsonicAlbum | null>(null);
   const [songs, setSongs] = useState<SubsonicSong[]>([]);
@@ -24,7 +27,7 @@ export function useAlbumDetails(
       setAlbum(data.album);
       setSongs(data.songs);
     } catch (err) {
-      onErrorRef.current(`Failed to load album: ${err instanceof Error ? err.message : "Unknown error"}`);
+      onErrorRef.current(`Failed to load album: ${toErrorMessage(err)}`);
     } finally {
       setLoading(false);
     }
@@ -34,7 +37,9 @@ export function useAlbumDetails(
     if (!subsonicService) return;
     try {
       setPlaylists(await subsonicService.getPlaylists());
-    } catch {}
+    } catch (err) {
+      onErrorRef.current(`Failed to load playlists: ${toErrorMessage(err)}`);
+    }
   }, [subsonicService]);
 
   useEffect(() => {
@@ -42,25 +47,32 @@ export function useAlbumDetails(
     loadPlaylists();
   }, [loadAlbum, loadPlaylists]);
 
-  const getCoverArtUrl = useCallback((coverArtId?: string): string => {
-    if (!coverArtId || !subsonicService) return DEFAULT_ALBUM_ART;
-    return subsonicService.getCoverArtUrl(coverArtId, 300);
-  }, [subsonicService]);
+  const getCoverArtUrl = useCoverArtUrl(subsonicService);
 
-  const addToPlaylist = useCallback(async (playlistId: string, songId: string) => {
-    if (!subsonicService) return;
-    await subsonicService.addToPlaylist(playlistId, [songId]);
-  }, [subsonicService]);
+  const addToPlaylist = useCallback(
+    async (playlistId: string, songId: string) => {
+      if (!subsonicService) return;
+      await subsonicService.addToPlaylist(playlistId, [songId]);
+    },
+    [subsonicService]
+  );
 
-  const createPlaylist = useCallback(async (name: string, songId: string) => {
-    if (!subsonicService) return;
-    await subsonicService.createPlaylist(name, [songId]);
-    await loadPlaylists();
-  }, [subsonicService, loadPlaylists]);
+  const createPlaylist = useCallback(
+    async (name: string, songId: string) => {
+      if (!subsonicService) return;
+      await subsonicService.createPlaylist(name, [songId]);
+      await loadPlaylists();
+    },
+    [subsonicService, loadPlaylists]
+  );
 
   return {
-    album, songs, loading, playlists,
-    getCoverArtUrl, addToPlaylist, createPlaylist,
-    refreshPlaylists: loadPlaylists,
+    album,
+    songs,
+    loading,
+    playlists,
+    getCoverArtUrl,
+    addToPlaylist,
+    createPlaylist,
   };
 }

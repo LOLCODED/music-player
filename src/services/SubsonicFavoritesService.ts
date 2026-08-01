@@ -1,14 +1,13 @@
-import axios from "axios";
 import { SubsonicConfig } from "../config/subsonic";
-import { SubsonicAlbum, SubsonicSong, SubsonicResponse } from "../types/subsonic";
-import { buildActionUrl } from "./SubsonicBase";
+import { SubsonicAlbum, SubsonicSong } from "../types/subsonic";
+import { request, toArray } from "./SubsonicBase";
 
 export type StarableType = "song" | "album" | "artist";
 
-function starParam(id: string, type: StarableType): string {
-  if (type === "album") return `albumId=${encodeURIComponent(id)}`;
-  if (type === "artist") return `artistId=${encodeURIComponent(id)}`;
-  return `id=${encodeURIComponent(id)}`;
+function starParams(id: string, type: StarableType): Record<string, string> {
+  if (type === "album") return { albumId: id };
+  if (type === "artist") return { artistId: id };
+  return { id };
 }
 
 export async function star(
@@ -17,8 +16,7 @@ export async function star(
   id: string,
   type: StarableType
 ): Promise<void> {
-  const url = `${buildActionUrl(config, salt, "star")}&${starParam(id, type)}`;
-  await axios.get(url);
+  await request(config, salt, "star", starParams(id, type));
 }
 
 export async function unstar(
@@ -27,28 +25,21 @@ export async function unstar(
   id: string,
   type: StarableType
 ): Promise<void> {
-  const url = `${buildActionUrl(config, salt, "unstar")}&${starParam(id, type)}`;
-  await axios.get(url);
+  await request(config, salt, "unstar", starParams(id, type));
 }
 
 export async function getStarred(
   config: SubsonicConfig,
   salt: string
 ): Promise<{ songs: SubsonicSong[]; albums: SubsonicAlbum[] }> {
-  const url = buildActionUrl(config, salt, "getStarred2");
-  const response = await axios.get<
-    SubsonicResponse<{ starred2: { song?: SubsonicSong | SubsonicSong[]; album?: SubsonicAlbum | SubsonicAlbum[] } }>
-  >(url);
-
-  if (response.data["subsonic-response"].status !== "ok") {
-    throw new Error(
-      response.data["subsonic-response"].error?.message || "Failed to get favorites"
-    );
-  }
-
-  const raw = (response.data["subsonic-response"] as any).starred2 ?? {};
-  const songs = raw.song ? (Array.isArray(raw.song) ? raw.song : [raw.song]) : [];
-  const albums = raw.album ? (Array.isArray(raw.album) ? raw.album : [raw.album]) : [];
-
-  return { songs, albums };
+  const data = await request<{
+    starred2: {
+      song?: SubsonicSong | SubsonicSong[];
+      album?: SubsonicAlbum | SubsonicAlbum[];
+    };
+  }>(config, salt, "getStarred2");
+  return {
+    songs: toArray(data.starred2?.song),
+    albums: toArray(data.starred2?.album),
+  };
 }

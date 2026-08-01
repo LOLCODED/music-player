@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useSettings } from "../contexts/SettingsContext";
 import { PlayerPosition } from "../types/settings";
-import { LayoutDiagram, LAYOUT_OPTIONS, FLOATER_CORNERS } from "../components/LayoutDiagram";
+import { useIsDesktop } from "../hooks/useIsDesktop";
+import { LayoutDiagram } from "../components/LayoutDiagram";
+import { LAYOUT_OPTIONS, FLOATER_CORNERS } from "../components/layoutOptions";
 
 const ACCENT_COLORS = [
   { label: "Purple", value: "#8b5cf6" },
@@ -15,81 +17,46 @@ const ACCENT_COLORS = [
   { label: "Indigo", value: "#6366f1" },
 ];
 
-const SettingsPage: React.FC = () => {
-  const { isDarkMode, toggleTheme, accentColor, setAccentColor, playerPosition, setPlayerPosition, mobilePlayerPosition, setMobilePlayerPosition } = useSettings();
-  const [isDesktop, setIsDesktop] = useState(false);
+const MOBILE_POSITIONS = ["bottom", "top"] as const;
 
-  useEffect(() => {
-    const check = () => setIsDesktop(window.innerWidth >= 768);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
+const SettingsPage: React.FC = () => {
+  const {
+    isDarkMode, toggleTheme, accentColor, setAccentColor,
+    playerPosition, setPlayerPosition, mobilePlayerPosition, setMobilePlayerPosition,
+  } = useSettings();
+  const isDesktop = useIsDesktop();
 
   const isFloaterSelected = playerPosition.startsWith("floater");
   const selectedFloaterCorner = isFloaterSelected ? playerPosition : "floater-br";
 
-  const rowStyle: React.CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "12px 0",
-    borderBottom: "1px solid var(--border)",
-  };
-
-  const sectionLabelStyle: React.CSSProperties = {
-    fontSize: 11,
-    fontWeight: 600,
-    color: "var(--fg-muted)",
-    letterSpacing: "0.08em",
-    textTransform: "uppercase",
-    marginBottom: 4,
-    marginTop: 24,
-  };
-
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+    <div className="page">
       <div className="page-header">
-        <span style={{ flex: 1, fontSize: 13, fontWeight: 600 }}>Settings</span>
+        <span className="page-header-title">Settings</span>
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "0 20px 32px" }}>
+        <div className="settings-section-label">Appearance</div>
 
-        {/* Appearance */}
-        <div style={sectionLabelStyle}>Appearance</div>
-
-        <div style={rowStyle}>
+        <div className="settings-row">
           <span>Theme</span>
           <button
+            className="settings-pill"
+            style={{ minWidth: 100 }}
             onClick={toggleTheme}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "6px 14px",
-              background: "var(--bg-elevated)",
-              border: "1px solid var(--border)",
-              borderRadius: 6,
-              color: "var(--fg)",
-              fontSize: 12,
-              fontFamily: "inherit",
-              cursor: "pointer",
-              minWidth: 100,
-              justifyContent: "center",
-            }}
           >
             {isDarkMode ? "🌙 Dark" : "☀️ Light"}
           </button>
         </div>
 
-        {/* Accent Color */}
-        <div style={sectionLabelStyle}>Accent Color</div>
+        <div className="settings-section-label">Accent Color</div>
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10, paddingTop: 8, paddingBottom: 16 }}>
           {ACCENT_COLORS.map(c => (
             <button
               key={c.value}
               title={c.label}
+              aria-label={c.label}
               onClick={() => setAccentColor(c.value)}
               style={{
                 width: 32,
@@ -97,7 +64,7 @@ const SettingsPage: React.FC = () => {
                 borderRadius: "50%",
                 background: c.value,
                 border: accentColor === c.value
-                  ? `3px solid var(--fg)`
+                  ? "3px solid var(--fg)"
                   : "3px solid transparent",
                 outline: accentColor === c.value ? `2px solid ${c.value}` : "none",
                 outlineOffset: 1,
@@ -110,27 +77,15 @@ const SettingsPage: React.FC = () => {
           ))}
         </div>
 
-        {/* Mobile Player Position — mobile only */}
         {!isDesktop && (
           <>
-            <div style={sectionLabelStyle}>Mobile Player Position</div>
+            <div className="settings-section-label">Mobile Player Position</div>
             <div style={{ display: "flex", gap: 8, marginBottom: 16, paddingTop: 8 }}>
-              {(['bottom', 'top'] as const).map(pos => (
+              {MOBILE_POSITIONS.map(pos => (
                 <button
                   key={pos}
+                  className={`settings-pill${mobilePlayerPosition === pos ? " is-selected" : ""}`}
                   onClick={() => setMobilePlayerPosition(pos)}
-                  style={{
-                    padding: "5px 16px",
-                    background: mobilePlayerPosition === pos ? "var(--accent)" : "var(--bg-elevated)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 5,
-                    color: mobilePlayerPosition === pos ? "white" : "var(--fg)",
-                    fontSize: 11,
-                    fontFamily: "inherit",
-                    cursor: "pointer",
-                    transition: "background 0.15s ease",
-                    textTransform: "capitalize",
-                  }}
                 >
                   {pos}
                 </button>
@@ -139,10 +94,9 @@ const SettingsPage: React.FC = () => {
           </>
         )}
 
-        {/* Player Layout (desktop only) */}
         {isDesktop && (
           <>
-            <div style={sectionLabelStyle}>Desktop Player Layout</div>
+            <div className="settings-section-label">Desktop Player Layout</div>
             <p style={{ fontSize: 11, color: "var(--fg-muted)", marginBottom: 12 }}>
               Choose where the player appears on desktop.
             </p>
@@ -151,78 +105,36 @@ const SettingsPage: React.FC = () => {
               {LAYOUT_OPTIONS.map(opt => (
                 <button
                   key={opt.value}
+                  className={`settings-option-card${playerPosition === opt.value ? " is-selected" : ""}`}
                   onClick={() => setPlayerPosition(opt.value)}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "10px 12px",
-                    background: playerPosition === opt.value ? "var(--bg-elevated)" : "var(--bg-surface)",
-                    border: playerPosition === opt.value
-                      ? "1px solid var(--accent)"
-                      : "1px solid var(--border)",
-                    borderRadius: 8,
-                    cursor: "pointer",
-                    color: "var(--fg)",
-                    fontSize: 11,
-                    fontFamily: "inherit",
-                    transition: "border-color 0.15s ease",
-                  }}
                 >
-                  {opt.diagram}
+                  <LayoutDiagram layout={opt.layout} />
                   <span>{opt.label}</span>
                 </button>
               ))}
 
-              {/* Floater option */}
               <button
+                className={`settings-option-card${isFloaterSelected ? " is-selected" : ""}`}
                 onClick={() => setPlayerPosition(selectedFloaterCorner as PlayerPosition)}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "10px 12px",
-                  background: isFloaterSelected ? "var(--bg-elevated)" : "var(--bg-surface)",
-                  border: isFloaterSelected
-                    ? "1px solid var(--accent)"
-                    : "1px solid var(--border)",
-                  borderRadius: 8,
-                  cursor: "pointer",
-                  color: "var(--fg)",
-                  fontSize: 11,
-                  fontFamily: "inherit",
-                  transition: "border-color 0.15s ease",
-                }}
               >
                 <LayoutDiagram layout="floater" />
                 <span>Floater</span>
               </button>
             </div>
 
-            {/* Desktop floater corner picker */}
             {isFloaterSelected && (
               <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 11, color: "var(--fg-muted)", marginBottom: 8 }}>Corner position</div>
+                <div style={{ fontSize: 11, color: "var(--fg-muted)", marginBottom: 8 }}>
+                  Corner position
+                </div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {FLOATER_CORNERS.map(c => (
+                  {FLOATER_CORNERS.map(corner => (
                     <button
-                      key={c.value}
-                      onClick={() => setPlayerPosition(c.value)}
-                      style={{
-                        padding: "5px 12px",
-                        background: playerPosition === c.value ? "var(--accent)" : "var(--bg-elevated)",
-                        border: "1px solid var(--border)",
-                        borderRadius: 5,
-                        color: playerPosition === c.value ? "white" : "var(--fg)",
-                        fontSize: 11,
-                        fontFamily: "inherit",
-                        cursor: "pointer",
-                        transition: "background 0.15s ease",
-                      }}
+                      key={corner.value}
+                      className={`settings-pill${playerPosition === corner.value ? " is-selected" : ""}`}
+                      onClick={() => setPlayerPosition(corner.value)}
                     >
-                      {c.label}
+                      {corner.label}
                     </button>
                   ))}
                 </div>

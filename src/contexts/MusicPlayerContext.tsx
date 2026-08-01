@@ -3,10 +3,13 @@ import React, {
   useContext,
   useState,
   useCallback,
+  useMemo,
   useRef,
 } from "react";
 import { SubsonicSong, SubsonicAlbum } from "../services/SubsonicService";
 import { DEFAULT_ALBUM_ART } from "../utils/defaultArt";
+import { COVER_ART_SIZE } from "../utils/constants";
+import { shuffleArray } from "../utils/shuffle";
 import { useAuth } from "./AuthContext";
 import { Song, RepeatMode } from "../types/player";
 import { recordSongPlay, recordPlaylistPlay } from "../utils/recentlyPlayed";
@@ -77,19 +80,20 @@ export const MusicPlayerProvider: React.FC<MusicPlayerProviderProps> = ({
   const [currentAlbum, setCurrentAlbum] = useState<SubsonicAlbum | null>(null);
   const [currentPlaylist, setCurrentPlaylist] = useState<SubsonicSong[]>([]);
   const [currentSourcePath, setCurrentSourcePath] = useState<string | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgressState] = useState(0);
   const [shuffle, setShuffle] = useState(false);
-  const [repeatMode, setRepeatMode] = useState<RepeatMode>('off');
+  const [repeatMode, setRepeatMode] = useState<RepeatMode>("off");
 
-  // Add ref to prevent excessive updates
-  const lastProgressUpdate = useRef<number>(0);
+  // Playback order used while shuffle is on: a permutation of playlist
+  // indexes, regenerated whenever the playlist changes or shuffle toggles on.
+  const shuffleOrderRef = useRef<number[]>([]);
 
   const getCoverArtUrl = useCallback(
     (coverArtId?: string) => {
-      if (!coverArtId || !subsonicService)
-        return DEFAULT_ALBUM_ART;
-      return subsonicService.getCoverArtUrl(coverArtId, 300);
+      if (!coverArtId || !subsonicService) return DEFAULT_ALBUM_ART;
+      return subsonicService.getCoverArtUrl(coverArtId, COVER_ART_SIZE);
     },
     [subsonicService]
   );
@@ -103,63 +107,93 @@ export const MusicPlayerProvider: React.FC<MusicPlayerProviderProps> = ({
   );
 
   const buildPlayableSong = useCallback(
-    (song: SubsonicSong, album?: SubsonicAlbum) => ({
-      id: song.id,
-      title: song.title,
-      artist: song.artist || album?.artist || "Unknown Artist",
-      albumName: album?.name,
-      albumId: album?.id,
-      albumArtUrl: album?.coverArt ? getCoverArtUrl(album.coverArt) : undefined,
-      audioUrl: getStreamUrl(song.id),
-    }),
-    [getCoverArtUrl, getStreamUrl]
+    (song: SubsonicSong, album?: SubsonicAlbum): Song => {
+      const coverArt = song.coverArt ?? album?.coverArt;
+      return {
+        id: song.id,
+        title: song.title,
+        artist: song.artist || album?.artist || "Unknown Artist",
+        albumName: song.album || album?.name,
+        albumId: album?.id ?? song.parent,
+        albumArtUrl: coverArt ? getCoverArtUrl(coverArt) : undefined,
+      };
+    },
+    [getCoverArtUrl]
+  );
+
+  const regenerateShuffleOrder = useCallback((length: number, startIndex: number) => {
+    const rest = Array.from({ length }, (_, i) => i).filter((i) => i !== startIndex);
+    shuffleOrderRef.current = [startIndex, ...shuffleArray(rest)];
+  }, []);
+
+  const startPlayback = useCallback(
+    (
+      songs: SubsonicSong[],
+      index: number,
+      album: SubsonicAlbum | null,
+      sourcePath: string | null
+    ) => {
+      const song = songs[index];
+      if (!song) return;
+      recordSongPlay(song);
+      setCurrentSong(buildPlayableSong(song, album ?? undefined));
+      setCurrentAlbum(album);
+      setCurrentPlaylist(songs);
+      setCurrentSourcePath(sourcePath);
+      setCurrentIndex(index);
+      setProgressState(0);
+      setIsPlaying(true);
+      regenerateShuffleOrder(songs.length, index);
+    },
+    [buildPlayableSong, regenerateShuffleOrder]
   );
 
   const playSong = useCallback(
     (song: SubsonicSong, album?: SubsonicAlbum, playlist?: SubsonicSong[]) => {
       if (currentSong?.id === song.id) {
-        setIsPlaying(!isPlaying);
-      } else {
-        recordSongPlay(song);
-        const playableSong = buildPlayableSong(song, album);
-        setCurrentSong(playableSong);
-        setCurrentAlbum(album || null);
-        setCurrentPlaylist(playlist || [song]);
-        setCurrentSourcePath(album ? `/album/${album.id}` : null);
-        setProgressState(0);
-        setIsPlaying(true);
+        setIsPlaying((playing) => !playing);
+        return;
       }
+      const songs = playlist?.length ? playlist : [song];
+      const index = Math.max(
+        songs.findIndex((s) => s.id === song.id),
+        0
+      );
+      startPlayback(songs, index, album ?? null, album ? `/album/${album.id}` : null);
     },
-    [currentSong, isPlaying, buildPlayableSong]
+    [currentSong, startPlayback]
   );
 
   const playAlbum = useCallback(
-    (album: SubsonicAlbum, songs: SubsonicSong[], startIndex: number = 0, playlistId?: string) => {
+    (
+      album: SubsonicAlbum,
+      songs: SubsonicSong[],
+      startIndex: number = 0,
+      playlistId?: string
+    ) => {
       if (songs.length === 0) return;
-
-      const songToPlay = songs[startIndex];
-      recordSongPlay(songToPlay);
       if (playlistId) recordPlaylistPlay(playlistId);
-      const playableSong = buildPlayableSong(songToPlay, album);
-
-      setCurrentSong(playableSong);
-      setCurrentAlbum(album);
-      setCurrentPlaylist(songs);
-      setCurrentSourcePath(playlistId ? `/playlist/${playlistId}` : `/album/${album.id}`);
-      setProgressState(0);
-      setIsPlaying(true);
+      startPlayback(
+        songs,
+        startIndex,
+        album,
+        playlistId ? `/playlist/${playlistId}` : `/album/${album.id}`
+      );
     },
-    [buildPlayableSong]
+    [startPlayback]
   );
 
   const togglePlayPause = useCallback(() => {
-    setIsPlaying(!isPlaying);
-  }, [isPlaying]);
+    setIsPlaying((playing) => !playing);
+  }, []);
 
   const getCurrentSongIndex = useCallback(() => {
     if (!currentSong || !currentPlaylist.length) return -1;
+    if (currentIndex >= 0 && currentPlaylist[currentIndex]?.id === currentSong.id) {
+      return currentIndex;
+    }
     return currentPlaylist.findIndex((song) => song.id === currentSong.id);
-  }, [currentSong, currentPlaylist]);
+  }, [currentSong, currentPlaylist, currentIndex]);
 
   const stop = useCallback(() => {
     setCurrentSong(null);
@@ -168,120 +202,138 @@ export const MusicPlayerProvider: React.FC<MusicPlayerProviderProps> = ({
     setCurrentPlaylist([]);
     setCurrentAlbum(null);
     setCurrentSourcePath(null);
+    setCurrentIndex(-1);
+    shuffleOrderRef.current = [];
   }, []);
 
-  const toggleShuffle = useCallback(() => setShuffle(s => !s), []);
+  const toggleShuffle = useCallback(() => {
+    setShuffle((wasOn) => {
+      if (!wasOn) {
+        regenerateShuffleOrder(currentPlaylist.length, currentIndex);
+      }
+      return !wasOn;
+    });
+  }, [currentPlaylist.length, currentIndex, regenerateShuffleOrder]);
+
   const toggleRepeat = useCallback(() => {
-    setRepeatMode(m => m === 'off' ? 'all' : m === 'all' ? 'one' : 'off');
+    setRepeatMode((m) => (m === "off" ? "all" : m === "all" ? "one" : "off"));
   }, []);
 
-  const skipNext = useCallback(() => {
-    if (!currentSong || !currentPlaylist.length) return;
+  const jumpToIndex = useCallback(
+    (index: number) => {
+      const song = currentPlaylist[index];
+      if (!song) return;
+      recordSongPlay(song);
+      setCurrentSong(buildPlayableSong(song, currentAlbum ?? undefined));
+      setCurrentIndex(index);
+      setProgressState(0);
+      setIsPlaying(true);
+    },
+    [currentPlaylist, currentAlbum, buildPlayableSong]
+  );
 
-    const currentIndex = getCurrentSongIndex();
-    let nextIndex: number;
+  const stepThroughOrder = useCallback(
+    (direction: 1 | -1) => {
+      if (!currentSong || !currentPlaylist.length) return;
 
-    if (shuffle && currentPlaylist.length > 1) {
-      do {
-        nextIndex = Math.floor(Math.random() * currentPlaylist.length);
-      } while (nextIndex === currentIndex);
-    } else {
-      nextIndex = currentIndex + 1;
-      if (nextIndex >= currentPlaylist.length) {
-        if (repeatMode === 'all') {
-          nextIndex = 0;
+      const index = getCurrentSongIndex();
+      const order = shuffle
+        ? shuffleOrderRef.current
+        : Array.from({ length: currentPlaylist.length }, (_, i) => i);
+      const position = order.indexOf(index);
+      const nextPosition = position + direction;
+
+      if (nextPosition >= order.length) {
+        if (repeatMode === "all") {
+          if (shuffle) regenerateShuffleOrder(currentPlaylist.length, order[0]);
+          jumpToIndex(shuffle ? shuffleOrderRef.current[0] : 0);
         } else {
           setIsPlaying(false);
-          return;
         }
+        return;
       }
-    }
+      if (nextPosition < 0) {
+        if (repeatMode === "all") {
+          jumpToIndex(order[order.length - 1]);
+        } else {
+          // At the start of the queue: restart the current track.
+          jumpToIndex(index);
+        }
+        return;
+      }
+      jumpToIndex(order[nextPosition]);
+    },
+    [
+      currentSong,
+      currentPlaylist,
+      getCurrentSongIndex,
+      shuffle,
+      repeatMode,
+      regenerateShuffleOrder,
+      jumpToIndex,
+    ]
+  );
 
-    const nextSong = currentPlaylist[nextIndex];
-    recordSongPlay(nextSong);
-    const playableSong = buildPlayableSong(nextSong, currentAlbum || undefined);
-
-    setCurrentSong(playableSong);
-    setProgressState(0);
-    setIsPlaying(true);
-  }, [
-    currentSong,
-    currentPlaylist,
-    currentAlbum,
-    getCurrentSongIndex,
-    buildPlayableSong,
-    shuffle,
-    repeatMode,
-  ]);
-
-  const skipPrevious = useCallback(() => {
-    if (!currentSong || !currentPlaylist.length) return;
-
-    const currentIndex = getCurrentSongIndex();
-    const previousIndex = currentIndex - 1;
-
-    if (previousIndex < 0) return;
-
-    const previousSong = currentPlaylist[previousIndex];
-    recordSongPlay(previousSong);
-    const playableSong = buildPlayableSong(
-      previousSong,
-      currentAlbum || undefined
-    );
-
-    setCurrentSong(playableSong);
-    setProgressState(0);
-    setIsPlaying(true);
-  }, [
-    currentSong,
-    currentPlaylist,
-    currentAlbum,
-    getCurrentSongIndex,
-    buildPlayableSong,
-  ]);
+  const skipNext = useCallback(() => stepThroughOrder(1), [stepThroughOrder]);
+  const skipPrevious = useCallback(() => stepThroughOrder(-1), [stepThroughOrder]);
 
   const setProgress = useCallback((newProgress: number) => {
-    const now = Date.now();
-
-    // Throttle updates to avoid excessive calls
-    if (now - lastProgressUpdate.current > 100) {
-      // Update at most every 100ms
-      if (!isNaN(newProgress) && newProgress >= 0 && newProgress <= 100) {
-        setProgressState(newProgress);
-        lastProgressUpdate.current = now;
-      }
+    if (!isNaN(newProgress) && newProgress >= 0 && newProgress <= 100) {
+      setProgressState(newProgress);
     }
   }, []);
 
   const isCurrentSong = useCallback(
-    (songId: string) => {
-      return currentSong?.id === songId;
-    },
+    (songId: string) => currentSong?.id === songId,
     [currentSong]
   );
 
-  const value: MusicPlayerContextType = {
-    currentSong,
-    currentAlbum,
-    currentPlaylist,
-    currentSourcePath,
-    isPlaying,
-    progress,
-    shuffle,
-    repeatMode,
-    playSong,
-    playAlbum,
-    togglePlayPause,
-    skipNext,
-    skipPrevious,
-    setProgress,
-    getStreamUrl,
-    toggleShuffle,
-    toggleRepeat,
-    stop,
-    isCurrentSong,
-    getCurrentSongIndex,
-  };
+  const value = useMemo<MusicPlayerContextType>(
+    () => ({
+      currentSong,
+      currentAlbum,
+      currentPlaylist,
+      currentSourcePath,
+      isPlaying,
+      progress,
+      shuffle,
+      repeatMode,
+      playSong,
+      playAlbum,
+      togglePlayPause,
+      skipNext,
+      skipPrevious,
+      setProgress,
+      getStreamUrl,
+      toggleShuffle,
+      toggleRepeat,
+      stop,
+      isCurrentSong,
+      getCurrentSongIndex,
+    }),
+    [
+      currentSong,
+      currentAlbum,
+      currentPlaylist,
+      currentSourcePath,
+      isPlaying,
+      progress,
+      shuffle,
+      repeatMode,
+      playSong,
+      playAlbum,
+      togglePlayPause,
+      skipNext,
+      skipPrevious,
+      setProgress,
+      getStreamUrl,
+      toggleShuffle,
+      toggleRepeat,
+      stop,
+      isCurrentSong,
+      getCurrentSongIndex,
+    ]
+  );
 
   return (
     <MusicPlayerContext.Provider value={value}>

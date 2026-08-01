@@ -1,44 +1,56 @@
 import React, { useState } from "react";
-import { ArrowLeft, Play, Pause, Star, Trash2, Shuffle, Repeat, Repeat1 } from "lucide-react";
-import { useParams, useHistory } from "react-router-dom";
+import { Play, Repeat, Repeat1, Shuffle, Trash2 } from "lucide-react";
+import { useParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useMusicPlayer } from "../contexts/MusicPlayerContext";
 import { SubsonicSong } from "../types/subsonic";
 import { buildPseudoAlbum } from "../utils/playlist";
 import { usePlaylistDetails } from "../hooks/usePlaylistDetails";
 import { useStarToggle } from "../hooks/useStarToggle";
+import { useToast } from "../hooks/useToast";
+import { formatTotalDuration } from "../utils/duration";
+import { toErrorMessage } from "../utils/errors";
+import CenteredSpinner from "../components/CenteredSpinner";
+import DetailHeader from "../components/DetailHeader";
+import DetailHero from "../components/DetailHero";
+import TrackListHeader from "../components/TrackListHeader";
+import TrackRow from "../components/TrackRow";
+import ConfirmDialog from "../components/ConfirmDialog";
+import Toast from "../components/Toast";
 
 const PlaylistDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { subsonicService } = useAuth();
-  const { playSong, playAlbum, isCurrentSong, isPlaying, currentSong, shuffle, repeatMode, toggleShuffle, toggleRepeat } = useMusicPlayer();
-  const history = useHistory();
+  const {
+    playAlbum, isCurrentSong, isPlaying, currentSong,
+    shuffle, repeatMode, toggleShuffle, toggleRepeat,
+  } = useMusicPlayer();
+  const { toast, showToast } = useToast();
 
-  const [toast, setToast] = useState("");
-  const [confirmRemove, setConfirmRemove] = useState<{ song: SubsonicSong; index: number } | null>(null);
-
-  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(""), 3000); };
+  const [confirmRemove, setConfirmRemove] =
+    useState<{ song: SubsonicSong; index: number } | null>(null);
 
   const { playlist, songs, loading, removeSong, getCoverArtUrl } =
     usePlaylistDetails(id, subsonicService, showToast);
-  const { isStarred, toggleStar } = useStarToggle(subsonicService);
+  const { isStarred, toggleStar } = useStarToggle(subsonicService, showToast);
 
   const handleRemoveSong = async (songIndex: number) => {
     try {
       await removeSong(songIndex);
       showToast("Song removed");
     } catch (err) {
-      showToast(`Failed to remove song: ${err instanceof Error ? err.message : "Unknown error"}`);
+      showToast(`Failed to remove song: ${toErrorMessage(err)}`);
     }
     setConfirmRemove(null);
   };
 
-  const handlePlayPlaylist = () => {
+  // Playing through the playlist keeps its context (queue + playlist id).
+  const playFromIndex = (index: number) => {
     if (!playlist || songs.length === 0) return;
-    playAlbum(buildPseudoAlbum(playlist), songs, 0, playlist.id);
+    playAlbum(buildPseudoAlbum(playlist), songs, index, playlist.id);
   };
 
-  const handleShufflePlay = () => {
+  const handleShuffleClick = () => {
     if (!playlist || songs.length === 0) return;
     if (!currentSong) {
       if (!shuffle) toggleShuffle();
@@ -48,114 +60,80 @@ const PlaylistDetailsPage: React.FC = () => {
     }
   };
 
-  const formatDuration = (seconds: number) =>
-    `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, "0")}`;
-
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", minHeight: 0 }}>
-      <div className="page-header">
-        <button className="btn-icon" onClick={() => history.goBack()} aria-label="Back">
-          <ArrowLeft size={18} />
-        </button>
-        <span style={{ flex: 1, fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {playlist?.name || "Playlist"}
-        </span>
-      </div>
+    <div className="page">
+      <DetailHeader title={playlist?.name || "Playlist"} />
 
       <div className="page-scroll">
         {loading ? (
-          <div style={{ display: "flex", justifyContent: "center", padding: 32 }}><div className="spinner" /></div>
+          <CenteredSpinner />
         ) : (
           <>
             {playlist && (
-              <div style={{ padding: "24px 16px 16px", display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap" }}>
-                <img
-                  src={getCoverArtUrl(playlist.coverArt)}
-                  alt={playlist.name}
-                  style={{ width: 160, height: 160, objectFit: "cover", borderRadius: 6, flexShrink: 0 }}
-                  onError={(e) => { (e.target as HTMLImageElement).src = "/assets/default-playlist-art.png"; }}
-                />
-                <div style={{ flex: 1, minWidth: 160, display: "flex", flexDirection: "column", gap: 6 }}>
-                  <div style={{ fontSize: 18, fontWeight: 700 }}>{playlist.name}</div>
-                  <div style={{ fontSize: 12, color: "var(--fg-muted)" }}>
-                    {playlist.songCount} songs · {(() => {
-                      const h = Math.floor(playlist.duration / 3600);
-                      const m = Math.floor((playlist.duration % 3600) / 60);
-                      return h > 0 ? `${h}h ${m}m` : `${m}m`;
-                    })()}
-                  </div>
-                  {playlist.comment && (
-                    <div style={{ fontSize: 12, color: "var(--fg-muted)" }}>{playlist.comment}</div>
-                  )}
-                  <div style={{ marginTop: 8, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                    <button className="btn btn-primary" onClick={handlePlayPlaylist} disabled={songs.length === 0}>
+              <DetailHero
+                imageUrl={getCoverArtUrl(playlist.coverArt)}
+                title={playlist.name}
+                metaLines={[
+                  `${playlist.songCount} songs · ${formatTotalDuration(playlist.duration)}`,
+                  playlist.comment ?? "",
+                ]}
+                actions={
+                  <>
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => playFromIndex(0)}
+                      disabled={songs.length === 0}
+                    >
                       <Play size={14} fill="currentColor" /> Play Playlist
                     </button>
                     <button
-                      className="btn"
-                      onClick={handleShufflePlay}
-                      style={{ color: shuffle ? "var(--accent)" : undefined, borderColor: shuffle ? "var(--accent)" : undefined }}
+                      className={`btn${shuffle ? " btn-toggled" : ""}`}
+                      onClick={handleShuffleClick}
+                      aria-label="Toggle shuffle"
                     >
                       <Shuffle size={14} />
                     </button>
                     <button
-                      className="btn"
+                      className={`btn${repeatMode !== "off" ? " btn-toggled" : ""}`}
                       onClick={toggleRepeat}
-                      style={{ color: repeatMode !== "off" ? "var(--accent)" : undefined, borderColor: repeatMode !== "off" ? "var(--accent)" : undefined }}
+                      aria-label="Toggle repeat"
                     >
                       {repeatMode === "one" ? <Repeat1 size={14} /> : <Repeat size={14} />}
                     </button>
-                  </div>
-                </div>
-              </div>
+                  </>
+                }
+              />
             )}
 
             <div>
-              <div className="track-row header">
-                <span style={{ flex: "0 0 28px", textAlign: "right" }}>#</span>
-                <span style={{ flex: 1 }}>Title</span>
-                <span style={{ width: 60, textAlign: "right" }}>Time</span>
-                <span style={{ width: 64 }} />
-              </div>
+              <TrackListHeader />
               {songs.map((song, index) => {
                 const starred = isStarred(song.id, song.starred);
                 return (
-                  <div
+                  <TrackRow
                     key={`${song.id}-${index}`}
-                    className={`track-row ${isCurrentSong(song.id) ? "active" : ""}`}
-                    onClick={() => playSong(song, undefined, songs)}
-                  >
-                    <span style={{ flex: "0 0 28px", textAlign: "right", color: "var(--fg-dim)", fontSize: 11 }}>
-                      {isCurrentSong(song.id)
-                        ? isPlaying ? <Pause size={12} /> : <Play size={12} fill="currentColor" />
-                        : index + 1}
-                    </span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{song.title}</div>
-                      <div style={{ fontSize: 11, color: "var(--fg-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {song.artist}
-                      </div>
-                    </div>
-                    <span style={{ width: 60, textAlign: "right", color: "var(--fg-dim)", fontSize: 11, flexShrink: 0 }}>
-                      {formatDuration(song.duration || 0)}
-                    </span>
-                    <button
-                      className="btn-icon"
-                      style={{ width: 32, flexShrink: 0, color: starred ? "var(--accent)" : undefined }}
-                      onClick={(e) => toggleStar(song.id, "song", starred, e)}
-                      aria-label={starred ? "Remove from favorites" : "Add to favorites"}
-                    >
-                      <Star size={13} fill={starred ? "currentColor" : "none"} />
-                    </button>
-                    <button
-                      className="btn-icon"
-                      style={{ width: 32, flexShrink: 0, color: "var(--error)" }}
-                      onClick={(e) => { e.stopPropagation(); setConfirmRemove({ song, index }); }}
-                      aria-label="Remove from playlist"
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  </div>
+                    index={index}
+                    title={song.title}
+                    subtitle={song.artist}
+                    durationSeconds={song.duration || 0}
+                    active={isCurrentSong(song.id)}
+                    playing={isPlaying}
+                    starred={starred}
+                    onClick={() => playFromIndex(index)}
+                    onToggleStar={(e) => toggleStar(song.id, "song", starred, e)}
+                    trailingAction={
+                      <button
+                        className="btn-icon track-row-action danger"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setConfirmRemove({ song, index });
+                        }}
+                        aria-label="Remove from playlist"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    }
+                  />
                 );
               })}
             </div>
@@ -164,25 +142,17 @@ const PlaylistDetailsPage: React.FC = () => {
       </div>
 
       {confirmRemove && (
-        <div className="modal-overlay">
-          <div className="modal-box">
-            <h3>Remove Song</h3>
-            <p>Remove "{confirmRemove.song.title}" from this playlist?</p>
-            <div className="modal-actions">
-              <button className="btn" onClick={() => setConfirmRemove(null)}>Cancel</button>
-              <button
-                className="btn"
-                style={{ background: "var(--error)", borderColor: "var(--error)", color: "white" }}
-                onClick={() => handleRemoveSong(confirmRemove.index)}
-              >
-                Remove
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDialog
+          title="Remove Song"
+          message={`Remove "${confirmRemove.song.title}" from this playlist?`}
+          confirmLabel="Remove"
+          destructive
+          onConfirm={() => handleRemoveSong(confirmRemove.index)}
+          onCancel={() => setConfirmRemove(null)}
+        />
       )}
 
-      {toast && <div className="toast">{toast}</div>}
+      <Toast message={toast} />
     </div>
   );
 };

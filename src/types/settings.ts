@@ -1,14 +1,19 @@
-export type PlayerPosition =
-  | 'bottom'
-  | 'top'
-  | 'left'
-  | 'right'
-  | 'floater-tl'
-  | 'floater-tr'
-  | 'floater-bl'
-  | 'floater-br';
+export const PLAYER_POSITIONS = [
+  'bottom',
+  'top',
+  'left',
+  'right',
+  'floater-tl',
+  'floater-tr',
+  'floater-bl',
+  'floater-br',
+] as const;
 
-export type MobilePlayerPosition = 'top' | 'bottom';
+export type PlayerPosition = (typeof PLAYER_POSITIONS)[number];
+
+export const MOBILE_PLAYER_POSITIONS = ['top', 'bottom'] as const;
+
+export type MobilePlayerPosition = (typeof MOBILE_PLAYER_POSITIONS)[number];
 
 export const ACCENT_HOVER_MAP: Record<string, string> = {
   '#8b5cf6': '#a78bfa',

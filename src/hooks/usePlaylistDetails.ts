@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { SubsonicPlaylist, SubsonicSong } from "../types/subsonic";
 import { SubsonicService } from "../services/SubsonicService";
+import { toErrorMessage } from "../utils/errors";
+import { useCoverArtUrl } from "./useCoverArt";
 
 export function usePlaylistDetails(
   id: string,
@@ -8,7 +10,9 @@ export function usePlaylistDetails(
   onError: (msg: string) => void
 ) {
   const onErrorRef = useRef(onError);
-  useEffect(() => { onErrorRef.current = onError; });
+  useEffect(() => {
+    onErrorRef.current = onError;
+  });
 
   const [playlist, setPlaylist] = useState<SubsonicPlaylist | null>(null);
   const [songs, setSongs] = useState<SubsonicSong[]>([]);
@@ -22,24 +26,26 @@ export function usePlaylistDetails(
       setPlaylist(data.playlist);
       setSongs(data.songs);
     } catch (err) {
-      onErrorRef.current(`Failed to load playlist: ${err instanceof Error ? err.message : "Unknown error"}`);
+      onErrorRef.current(`Failed to load playlist: ${toErrorMessage(err)}`);
     } finally {
       setLoading(false);
     }
   }, [id, subsonicService]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
-  const removeSong = useCallback(async (songIndex: number) => {
-    if (!subsonicService || !playlist) return;
-    await subsonicService.removeFromPlaylist(playlist.id, [songIndex]);
-    await load();
-  }, [subsonicService, playlist, load]);
+  const removeSong = useCallback(
+    async (songIndex: number) => {
+      if (!subsonicService || !playlist) return;
+      await subsonicService.removeFromPlaylist(playlist.id, [songIndex]);
+      await load();
+    },
+    [subsonicService, playlist, load]
+  );
 
-  const getCoverArtUrl = useCallback((coverArtId?: string): string => {
-    if (!coverArtId || !subsonicService) return "/assets/default-playlist-art.png";
-    return subsonicService.getCoverArtUrl(coverArtId, 300);
-  }, [subsonicService]);
+  const getCoverArtUrl = useCoverArtUrl(subsonicService);
 
   return { playlist, songs, loading, removeSong, getCoverArtUrl };
 }

@@ -1,7 +1,6 @@
 import React from "react";
-import { PlayerPosition } from "../types/settings";
 
-type DiagramLayout = "bottom" | "top" | "left" | "right" | "floater";
+export type DiagramLayout = "bottom" | "top" | "left" | "right" | "floater";
 
 interface LayoutDiagramProps {
   layout: DiagramLayout;
@@ -63,17 +62,3 @@ export const LayoutDiagram: React.FC<LayoutDiagramProps> = ({ layout }) => {
     </div>
   );
 };
-
-export const LAYOUT_OPTIONS: { value: PlayerPosition; label: string; diagram: React.ReactNode }[] = [
-  { value: "bottom", label: "Bottom Bar", diagram: <LayoutDiagram layout="bottom" /> },
-  { value: "top", label: "Top Bar", diagram: <LayoutDiagram layout="top" /> },
-  { value: "left", label: "Left Panel", diagram: <LayoutDiagram layout="left" /> },
-  { value: "right", label: "Right Panel", diagram: <LayoutDiagram layout="right" /> },
-];
-
-export const FLOATER_CORNERS: { value: PlayerPosition; label: string }[] = [
-  { value: "floater-tl", label: "Top Left" },
-  { value: "floater-tr", label: "Top Right" },
-  { value: "floater-bl", label: "Bottom Left" },
-  { value: "floater-br", label: "Bottom Right" },
-];
