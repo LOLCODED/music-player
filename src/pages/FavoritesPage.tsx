@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useMusicPlayer } from "../contexts/MusicPlayerContext";
 import { useFavorites, FavoritesSection } from "../hooks/useFavorites";
@@ -50,7 +50,7 @@ interface FavoriteItem {
 const FavoritesPage: React.FC = () => {
   const { subsonicService } = useAuth();
   const { playSong, isCurrentSong, isPlaying } = useMusicPlayer();
-  const history = useHistory();
+  const navigate = useNavigate();
   const [section, setSection] = useState<FavoritesSection>("songs");
   const [viewMode, setViewMode] = useViewMode("viewMode:favorites");
   const { toast, showToast } = useToast();
@@ -103,7 +103,7 @@ const FavoritesPage: React.FC = () => {
           time: undefined,
           active: false,
           playing: false,
-          onOpen: () => history.push(`/album/${album.id}`),
+          onOpen: () => navigate(`/album/${album.id}`),
           onPlay: () => handlePlayAlbum(album.id),
           onUnstar: () => handleUnstar(() => unstarAlbum(album.id)),
         }));

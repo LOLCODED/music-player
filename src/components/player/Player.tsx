@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from "react";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Song, QueueEntry, PlayerVariantProps, RepeatMode } from "../../types/player";
 import { useSettings } from "../../contexts/SettingsContext";
 import { useAudioPlayer } from "../../hooks/useAudioPlayer";
@@ -50,7 +50,7 @@ const Player: React.FC<PlayerProps> = ({
   sourcePath,
 }) => {
   const { playerPosition } = useSettings();
-  const history = useHistory();
+  const navigate = useNavigate();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const isDesktop = useIsDesktop();
 
@@ -69,8 +69,8 @@ const Player: React.FC<PlayerProps> = ({
   });
 
   const handleArtClick = useCallback(() => {
-    if (sourcePath) history.push(sourcePath);
-  }, [sourcePath, history]);
+    if (sourcePath) navigate(sourcePath);
+  }, [sourcePath, navigate]);
 
   const openFullscreen = useCallback(() => setIsFullscreen(true), []);
   const closeFullscreen = useCallback(() => setIsFullscreen(false), []);

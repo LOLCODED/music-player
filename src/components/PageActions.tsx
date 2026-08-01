@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { LogOut, Menu, RefreshCw, Settings } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useIsDesktop } from "../hooks/useIsDesktop";
 
 interface PageActionsProps {
@@ -26,7 +26,7 @@ const PageActions: React.FC<PageActionsProps> = ({ onRefresh }) => {
   const isDesktop = useIsDesktop();
   const [open, setOpen] = useState(false);
   const { logout } = useAuth();
-  const history = useHistory();
+  const navigate = useNavigate();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -80,7 +80,7 @@ const PageActions: React.FC<PageActionsProps> = ({ onRefresh }) => {
           </button>
           <button
             style={menuItemStyle}
-            onClick={() => { setOpen(false); history.push("/settings"); }}
+            onClick={() => { setOpen(false); navigate("/settings"); }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--bg-surface)"; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
           >

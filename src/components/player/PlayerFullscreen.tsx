@@ -1,6 +1,6 @@
 import React from "react";
 import { ChevronDown, X } from "lucide-react";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { PlayerVariantProps } from "../../types/player";
 import PlayerTransport from "./PlayerTransport";
 import QueueList from "./QueueList";
@@ -25,7 +25,7 @@ const PlayerFullscreen: React.FC<PlayerFullscreenProps> = ({
   onToggleMute, onProgressPointerDown, onVolumePointerDown, volumeWheelRef,
   sourcePath, handleArtClick, formatTime, onClose,
 }) => {
-  const history = useHistory();
+  const navigate = useNavigate();
 
   return (
     <div className="player-fullscreen">
@@ -58,7 +58,7 @@ const PlayerFullscreen: React.FC<PlayerFullscreenProps> = ({
               style={{ cursor: "pointer", color: "var(--accent)" }}
               onClick={() => {
                 onClose();
-                history.push(`/albums?artist=${encodeURIComponent(currentSong.artist)}`);
+                navigate(`/albums?artist=${encodeURIComponent(currentSong.artist)}`);
               }}
             >
               {currentSong.artist}
@@ -69,7 +69,7 @@ const PlayerFullscreen: React.FC<PlayerFullscreenProps> = ({
                 onClick={() => {
                   if (currentSong.albumId) {
                     onClose();
-                    history.push(`/album/${currentSong.albumId}`);
+                    navigate(`/album/${currentSong.albumId}`);
                   }
                 }}
               >

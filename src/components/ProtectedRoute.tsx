@@ -1,34 +1,23 @@
-import React from 'react';
-import { Route, Redirect, RouteProps, RouteComponentProps } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import React from "react";
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import CenteredSpinner from "./CenteredSpinner";
 
-interface ProtectedRouteProps extends RouteProps {
-  component: React.ComponentType<RouteComponentProps>;
+interface ProtectedRouteProps {
+  children: React.ReactNode;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ component: Component, ...rest }) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
 
-  return (
-    <Route
-      {...rest}
-      render={props => {
-        if (loading) {
-          return (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-              <div className="spinner" />
-            </div>
-          );
-        }
+  if (loading) return <CenteredSpinner />;
 
-        return isAuthenticated ? (
-          <Component {...props} />
-        ) : (
-          <Redirect to={{ pathname: '/login', state: { from: props.location } }} />
-        );
-      }}
-    />
-  );
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  return <>{children}</>;
 };
 
 export default ProtectedRoute;

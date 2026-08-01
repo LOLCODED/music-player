@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Trash2 } from "lucide-react";
 import { SubsonicConfig, APP_NAME, API_VERSION } from "../config/subsonic";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../hooks/useToast";
 import Modal from "../components/Modal";
@@ -23,7 +23,7 @@ const LoginPage: React.FC = () => {
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [saveName, setSaveName] = useState("");
 
-  const history = useHistory();
+  const navigate = useNavigate();
   const { toast, showToast } = useToast();
   // subsonicConfig holds the token+salt form of the credentials after a
   // successful login, so saved servers never contain the raw password.
@@ -55,7 +55,7 @@ const LoginPage: React.FC = () => {
     setSavedCredentials(updated);
     setShowSaveDialog(false);
     setSaveName("");
-    history.replace("/albums");
+    navigate("/albums", { replace: true });
   };
 
   const handleDeleteCredential = (id: string) => {
@@ -70,7 +70,7 @@ const LoginPage: React.FC = () => {
     try {
       const success = await login(cred, true);
       if (success) {
-        history.replace("/albums");
+        navigate("/albums", { replace: true });
       } else {
         showToast("Failed to connect. Please check your credentials.");
       }
@@ -112,7 +112,7 @@ const LoginPage: React.FC = () => {
 
   const handleSkipSave = () => {
     setShowSaveDialog(false);
-    history.replace("/albums");
+    navigate("/albums", { replace: true });
   };
 
   return (

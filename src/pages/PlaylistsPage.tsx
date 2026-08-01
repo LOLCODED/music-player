@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { SubsonicPlaylist } from "../types/subsonic";
 import { buildPseudoAlbum } from "../utils/playlist";
@@ -37,7 +37,7 @@ const TABLE_HEADERS: MediaTableHeader[] = [
 
 const PlaylistsPage: React.FC = () => {
   const { subsonicService, isAuthenticated } = useAuth();
-  const history = useHistory();
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useViewMode("viewMode:playlists");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [playlistToDelete, setPlaylistToDelete] = useState<SubsonicPlaylist | null>(null);
@@ -79,7 +79,7 @@ const PlaylistsPage: React.FC = () => {
   };
 
   const openPlaylist = (playlist: SubsonicPlaylist) =>
-    history.push(`/playlist/${playlist.id}`);
+    navigate(`/playlist/${playlist.id}`);
 
   return (
     <div className="page">

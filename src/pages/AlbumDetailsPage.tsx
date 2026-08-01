@@ -19,7 +19,7 @@ import CreatePlaylistDialog from "../components/CreatePlaylistDialog";
 import Toast from "../components/Toast";
 
 const AlbumDetailsPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id = "" } = useParams();
   const { subsonicService } = useAuth();
   const {
     playSong, playAlbum, isCurrentSong, isPlaying, currentSong,

@@ -207,13 +207,13 @@ export const MusicPlayerProvider: React.FC<MusicPlayerProviderProps> = ({
   }, []);
 
   const toggleShuffle = useCallback(() => {
-    setShuffle((wasOn) => {
-      if (!wasOn) {
-        regenerateShuffleOrder(currentPlaylist.length, currentIndex);
-      }
-      return !wasOn;
-    });
-  }, [currentPlaylist.length, currentIndex, regenerateShuffleOrder]);
+    // Build the new order outside the updater: React may invoke updaters
+    // more than once, and they must stay free of side effects.
+    if (!shuffle) {
+      regenerateShuffleOrder(currentPlaylist.length, currentIndex);
+    }
+    setShuffle((wasOn) => !wasOn);
+  }, [shuffle, currentPlaylist.length, currentIndex, regenerateShuffleOrder]);
 
   const toggleRepeat = useCallback(() => {
     setRepeatMode((m) => (m === "off" ? "all" : m === "all" ? "one" : "off"));
@@ -244,12 +244,19 @@ export const MusicPlayerProvider: React.FC<MusicPlayerProviderProps> = ({
       const nextPosition = position + direction;
 
       if (nextPosition >= order.length) {
-        if (repeatMode === "all") {
-          if (shuffle) regenerateShuffleOrder(currentPlaylist.length, order[0]);
-          jumpToIndex(shuffle ? shuffleOrderRef.current[0] : 0);
-        } else {
+        if (repeatMode !== "all") {
           setIsPlaying(false);
+          return;
         }
+        if (!shuffle) {
+          jumpToIndex(0);
+          return;
+        }
+        // Reshuffle for the next cycle from a fresh random anchor, so the
+        // same track doesn't lead every pass through the queue.
+        const anchor = Math.floor(Math.random() * currentPlaylist.length);
+        regenerateShuffleOrder(currentPlaylist.length, anchor);
+        jumpToIndex(shuffleOrderRef.current[0]);
         return;
       }
       if (nextPosition < 0) {

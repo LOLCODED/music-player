@@ -1,5 +1,5 @@
 import React from "react";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { SubsonicAlbum } from "../types/subsonic";
 import { useAuth } from "../contexts/AuthContext";
 import { useAlbums, AlbumSortType } from "../hooks/useAlbums";
@@ -35,7 +35,7 @@ const TABLE_HEADERS: MediaTableHeader[] = [
 
 const AlbumsPage: React.FC = () => {
   const { subsonicService } = useAuth();
-  const history = useHistory();
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useViewMode("viewMode:albums");
   const { toast, showToast } = useToast();
   const { isStarred, toggleStar } = useStarToggle(subsonicService, showToast);
@@ -55,7 +55,7 @@ const AlbumsPage: React.FC = () => {
     }));
   };
 
-  const openAlbum = (album: SubsonicAlbum) => history.push(`/album/${album.id}`);
+  const openAlbum = (album: SubsonicAlbum) => navigate(`/album/${album.id}`);
   const canLoadMore = hasMore && !searchText.trim();
   const showSpinner = (loading || searchLoading) && filteredAlbums.length === 0;
 

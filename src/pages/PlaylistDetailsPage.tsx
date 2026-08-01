@@ -19,7 +19,7 @@ import ConfirmDialog from "../components/ConfirmDialog";
 import Toast from "../components/Toast";
 
 const PlaylistDetailsPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id = "" } = useParams();
   const { subsonicService } = useAuth();
   const {
     playAlbum, isCurrentSong, isPlaying, currentSong,

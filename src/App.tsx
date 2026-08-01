@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Redirect, Route, Switch } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { MusicPlayerProvider } from "./contexts/MusicPlayerContext";
 import { SettingsProvider } from "./contexts/SettingsContext";
@@ -13,11 +13,18 @@ const App: React.FC = () => {
       <AuthProvider>
         <MusicPlayerProvider>
           <BrowserRouter>
-            <Switch>
-              <Route exact path="/login" component={LoginPage} />
-              <ProtectedRoute path="/" component={AppShell} />
-              <Redirect to="/albums" />
-            </Switch>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              {/* Trailing splat lets AppShell declare its own nested routes. */}
+              <Route
+                path="/*"
+                element={
+                  <ProtectedRoute>
+                    <AppShell />
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
           </BrowserRouter>
         </MusicPlayerProvider>
       </AuthProvider>
