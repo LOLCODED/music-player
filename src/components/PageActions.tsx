@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { LogOut, Menu, RefreshCw, Settings } from "lucide-react";
+import { LogOut, Menu, RefreshCw, Server, Settings } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useIsDesktop } from "../hooks/useIsDesktop";
@@ -77,6 +77,15 @@ const PageActions: React.FC<PageActionsProps> = ({ onRefresh }) => {
           >
             <RefreshCw size={14} />
             Refresh
+          </button>
+          <button
+            style={menuItemStyle}
+            onClick={() => { setOpen(false); navigate("/connections"); }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--bg-surface)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+          >
+            <Server size={14} />
+            Connections
           </button>
           <button
             style={menuItemStyle}

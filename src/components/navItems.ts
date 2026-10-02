@@ -1,4 +1,4 @@
-import { Disc3, Heart, ListMusic, Music, Settings } from "lucide-react";
+import { Disc3, Heart, ListMusic, Music, Server, Settings } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export interface NavItem {
@@ -15,6 +15,8 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/playlists", label: "Playlists", Icon: ListMusic, activePrefix: "/playlist/" },
   { to: "/favorites", label: "Favorites", Icon: Heart },
 ];
+
+export const CONNECTIONS_ITEM: NavItem = { to: "/connections", label: "Connections", Icon: Server };
 
 export const SETTINGS_ITEM: NavItem = { to: "/settings", label: "Settings", Icon: Settings };
 

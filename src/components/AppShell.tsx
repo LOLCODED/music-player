@@ -7,6 +7,7 @@ import PlaylistDetailsPage from "../pages/PlaylistDetailsPage";
 import SongsPage from "../pages/SongsPage";
 import FavoritesPage from "../pages/FavoritesPage";
 import SettingsPage from "../pages/SettingsPage";
+import ConnectionsPage from "../pages/ConnectionsPage";
 import Sidebar from "./Sidebar";
 import TabBar from "./TabBar";
 import GlobalPlayer from "./GlobalPlayer";
@@ -29,6 +30,7 @@ const AppShell: React.FC = () => {
           <Route path="/playlist/:id" element={<PlaylistDetailsPage />} />
           <Route path="/songs" element={<SongsPage />} />
           <Route path="/favorites" element={<FavoritesPage />} />
+          <Route path="/connections" element={<ConnectionsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/albums" replace />} />
         </Routes>

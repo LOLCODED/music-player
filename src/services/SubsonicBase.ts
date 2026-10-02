@@ -41,6 +41,15 @@ export function deriveAuthToken(
   return { token: MD5(config.password + salt).toString(), salt };
 }
 
+// Replace the raw password with a derived token+salt pair so nothing we
+// persist to storage ever contains the password itself.
+export function withTokenAuth(config: SubsonicConfig): SubsonicConfig {
+  if (config.token && config.salt) return config;
+  const { token, salt } = deriveAuthToken(config, generateSalt());
+  const { password: _password, ...rest } = config;
+  return { ...rest, token, salt };
+}
+
 type QueryValue = string | number | boolean | undefined;
 
 export function buildActionUrl(

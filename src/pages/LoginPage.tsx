@@ -4,13 +4,9 @@ import { SubsonicConfig, APP_NAME, API_VERSION } from "../config/subsonic";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../hooks/useToast";
-import Modal from "../components/Modal";
+import SaveConnectionDialog from "../components/SaveConnectionDialog";
 import Toast from "../components/Toast";
-
-interface SavedCredential extends SubsonicConfig {
-  id: string;
-  name: string;
-}
+import { useSavedConnections, type SavedConnection } from "../hooks/useSavedConnections";
 
 const LoginPage: React.FC = () => {
   const [serverUrl, setServerUrl] = useState("");
@@ -19,53 +15,40 @@ const LoginPage: React.FC = () => {
   const [appName, setAppName] = useState(APP_NAME);
   const [apiVersion, setApiVersion] = useState(API_VERSION);
   const [loading, setLoading] = useState(false);
-  const [savedCredentials, setSavedCredentials] = useState<SavedCredential[]>([]);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
-  const [saveName, setSaveName] = useState("");
 
   const navigate = useNavigate();
   const { toast, showToast } = useToast();
   // subsonicConfig holds the token+salt form of the credentials after a
   // successful login, so saved servers never contain the raw password.
   const { login, subsonicConfig } = useAuth();
+  const {
+    connections: savedCredentials,
+    loadFailed,
+    saveConnection,
+    removeConnection,
+  } = useSavedConnections();
 
   useEffect(() => {
-    const saved = localStorage.getItem("savedCredentials");
-    if (!saved) return;
-    try {
-      const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed)) setSavedCredentials(parsed);
-    } catch {
-      showToast("Could not load saved servers");
-    }
-  }, [showToast]);
+    if (loadFailed) showToast("Could not load saved servers");
+  }, [loadFailed, showToast]);
 
-  const handleSaveCredential = () => {
-    if (!subsonicConfig || !saveName.trim()) {
+  const handleSaveCredential = (name: string) => {
+    if (!subsonicConfig || !name) {
       showToast("Please enter a name for the server");
       return;
     }
-    const newCredential: SavedCredential = {
-      id: Date.now().toString(),
-      ...subsonicConfig,
-      name: saveName.trim(),
-    };
-    const updated = [...savedCredentials, newCredential];
-    localStorage.setItem("savedCredentials", JSON.stringify(updated));
-    setSavedCredentials(updated);
+    saveConnection(subsonicConfig, name);
     setShowSaveDialog(false);
-    setSaveName("");
     navigate("/albums", { replace: true });
   };
 
   const handleDeleteCredential = (id: string) => {
-    const updated = savedCredentials.filter(c => c.id !== id);
-    localStorage.setItem("savedCredentials", JSON.stringify(updated));
-    setSavedCredentials(updated);
+    removeConnection(id);
     showToast("Server removed");
   };
 
-  const handleLoadCredential = async (cred: SavedCredential) => {
+  const handleLoadCredential = async (cred: SavedConnection) => {
     setLoading(true);
     try {
       const success = await login(cred, true);
@@ -98,7 +81,6 @@ const LoginPage: React.FC = () => {
       };
       const success = await login(config, false);
       if (success) {
-        setSaveName("");
         setShowSaveDialog(true);
       } else {
         showToast("Failed to connect. Please check your credentials.");
@@ -207,29 +189,13 @@ const LoginPage: React.FC = () => {
       </div>
 
       {showSaveDialog && (
-        <Modal title="Connection Successful" onClose={handleSkipSave}>
-          <p>Save these credentials for future use?</p>
-          <form
-            className="modal-form"
-            onSubmit={e => { e.preventDefault(); handleSaveCredential(); }}
-          >
-            <input
-              type="text"
-              placeholder="Server name (e.g. Home Server)"
-              aria-label="Server name"
-              value={saveName}
-              onChange={e => setSaveName(e.target.value)}
-            />
-            <div className="modal-actions">
-              <button type="button" className="btn" onClick={handleSkipSave}>
-                Skip
-              </button>
-              <button type="submit" className="btn btn-primary">
-                Save
-              </button>
-            </div>
-          </form>
-        </Modal>
+        <SaveConnectionDialog
+          title="Connection Successful"
+          message="Save these credentials for future use?"
+          cancelLabel="Skip"
+          onSave={handleSaveCredential}
+          onCancel={handleSkipSave}
+        />
       )}
 
       <Toast message={toast} />

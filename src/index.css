@@ -1136,6 +1136,27 @@ select option { background: var(--bg-surface); }
 .saved-server-info { flex: 1; min-width: 0; }
 .saved-server-name { font-size: 12px; font-weight: 500; }
 .saved-server-url { font-size: 11px; color: var(--fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+button.saved-server-info {
+  padding: 0;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+button.saved-server-info:disabled { cursor: default; }
+.saved-server.is-active { border-color: var(--accent); cursor: default; }
+.saved-server.is-active:hover { background: transparent; }
+.saved-server-active-icon { color: var(--accent); flex-shrink: 0; }
+.connections-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 
 /* Shared page layout */
 .page {

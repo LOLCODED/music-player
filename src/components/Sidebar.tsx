@@ -2,11 +2,11 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { LogOut } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import { NAV_ITEMS, SETTINGS_ITEM, isNavItemActive, type NavItem } from "./navItems";
+import { CONNECTIONS_ITEM, NAV_ITEMS, SETTINGS_ITEM, isNavItemActive, type NavItem } from "./navItems";
 
 const SIDEBAR_ICON_SIZE = 16;
 
-const SETTINGS_LINK_STYLE: React.CSSProperties = { marginTop: "auto" };
+const FOOTER_LINK_STYLE: React.CSSProperties = { marginTop: "auto" };
 const LOGOUT_BUTTON_STYLE: React.CSSProperties = {
   width: "100%",
   background: "none",
@@ -34,7 +34,8 @@ const Sidebar: React.FC = () => {
   return (
     <div className="sidebar">
       {NAV_ITEMS.map((item) => renderLink(item))}
-      {renderLink(SETTINGS_ITEM, SETTINGS_LINK_STYLE)}
+      {renderLink(CONNECTIONS_ITEM, FOOTER_LINK_STYLE)}
+      {renderLink(SETTINGS_ITEM)}
       <button onClick={logout} className="sidebar-nav-link" style={LOGOUT_BUTTON_STYLE}>
         <LogOut size={SIDEBAR_ICON_SIZE} />
         <span>Logout</span>
