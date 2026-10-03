@@ -221,3 +221,76 @@ body[data-skin="itunes"] .modal-box {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 body[data-skin="itunes"] .modal-overlay { background: rgba(0, 0, 0, 0.3); }
+
+body[data-skin="itunes"] .player-panel,
+body[data-skin="itunes"] .player-fullscreen { background: linear-gradient(#e6e6e6, #cfcfcf); }
+body[data-skin="itunes"] .player-panel-topbar,
+body[data-skin="itunes"] .player-fullscreen-header {
+  background: var(--itunes-metal);
+  border-bottom: 1px solid #8e8e8e;
+}
+body[data-skin="itunes"] .player-fullscreen-heading { color: #000; font-weight: 700; text-shadow: 0 1px 0 #fff; }
+body[data-skin="itunes"] .player-panel-art,
+body[data-skin="itunes"] .player-fullscreen-panel-art { border-bottom: 1px solid #8e8e8e; }
+body[data-skin="itunes"] .player-panel-readout,
+body[data-skin="itunes"] .player-floater-info {
+  background: var(--itunes-lcd);
+  border: 1px solid #8d9178;
+  border-radius: 5px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+body[data-skin="itunes"] .player-panel-readout .player-panel-title { font-size: 12px; font-weight: 700; }
+body[data-skin="itunes"] .player-panel-readout .player-panel-artist,
+body[data-skin="itunes"] .player-panel-readout .player-time,
+body[data-skin="itunes"] .player-fullscreen-album { color: #333; }
+
+body[data-skin="itunes"] .player-volume-row .btn-icon {
+  width: auto;
+  height: auto;
+  background: none;
+  border: none;
+  box-shadow: none;
+}
+
+body[data-skin="itunes"] .player-panel-queue {
+  background: #fff;
+  border-top-color: #8e8e8e;
+}
+body[data-skin="itunes"] .player-panel-queue-header {
+  background: var(--itunes-header);
+  color: #000;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 3px 12px;
+  border-bottom: 1px solid #9a9a9a;
+}
+body[data-skin="itunes"] .player-panel-queue-item { padding: 3px 12px; }
+body[data-skin="itunes"] .player-panel-queue-item:nth-child(odd) { background: var(--itunes-zebra); }
+body[data-skin="itunes"] .player-panel-queue-item:hover { background: #d8e4f6; }
+body[data-skin="itunes"] .player-panel-queue-item.active { background: var(--itunes-select); }
+body[data-skin="itunes"] .player-panel-queue-item.active .player-panel-queue-title,
+body[data-skin="itunes"] .player-panel-queue-item.active .player-panel-queue-artist { color: #fff; }
+body[data-skin="itunes"] .player-panel-queue-artist { color: #4a4a4a; }
+
+body[data-skin="itunes"] .player-floater-inner {
+  background: linear-gradient(#ededed, #c9c9c9);
+  border-color: #8e8e8e;
+  border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+body[data-skin="itunes"] .player-floater-info { padding: 3px 8px; text-align: center; }
+body[data-skin="itunes"] .player-floater-title { color: #000; font-weight: 700; font-size: 11px; }
+body[data-skin="itunes"] .player-floater-artist { color: #333; }
+body[data-skin="itunes"] .player-floater-controls .btn-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(#fdfdfd, #c4c4c4);
+  border: 1px solid #777;
+  color: #222;
+  box-shadow: inset 0 1px 0 #fff, 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+body[data-skin="itunes"] .player-floater-controls { gap: 4px; }
+body[data-skin="itunes"] .player-floater .progress-bar { margin: 0 10px 10px; }

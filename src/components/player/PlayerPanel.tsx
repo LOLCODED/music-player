@@ -31,15 +31,17 @@ const PlayerPanel: React.FC<PlayerVariantProps> = ({
         onError={(e) => { (e.target as HTMLImageElement).src = DEFAULT_ALBUM_ART; }}
       />
       <div className="player-panel-body">
-        <div>
-          <div className="player-panel-title">{currentSong.title}</div>
-          <div className="player-panel-artist">{currentSong.artist}</div>
-        </div>
+        <div className="player-panel-readout">
+          <div>
+            <div className="player-panel-title">{currentSong.title}</div>
+            <div className="player-panel-artist">{currentSong.artist}</div>
+          </div>
 
-        <div className="player-progress-section">
-          <span className="player-time">{formatTime(currentTime)}</span>
-          <ProgressBar displayProgress={displayProgress} isDragging={isDragging} onPointerDown={onProgressPointerDown} />
-          <span className="player-time" style={{ textAlign: "right" }}>{formatTime(duration)}</span>
+          <div className="player-progress-section">
+            <span className="player-time">{formatTime(currentTime)}</span>
+            <ProgressBar displayProgress={displayProgress} isDragging={isDragging} onPointerDown={onProgressPointerDown} />
+            <span className="player-time" style={{ textAlign: "right" }}>{formatTime(duration)}</span>
+          </div>
         </div>
 
         <PlayerTransport
@@ -54,7 +56,7 @@ const PlayerPanel: React.FC<PlayerVariantProps> = ({
           onToggleRepeat={onToggleRepeat}
         />
 
-        <div className="player-controls" style={{ gap: 8 }}>
+        <div className="player-controls player-volume-row" style={{ gap: 8 }}>
           <VolumeBar volume={volume} isMuted={isMuted} isDragging={isVolumeDragging} onToggleMute={onToggleMute}
             onPointerDown={onVolumePointerDown} wheelRef={volumeWheelRef} barStyle={{ flex: 1 }} />
         </div>

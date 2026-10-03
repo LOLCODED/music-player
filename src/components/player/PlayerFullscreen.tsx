@@ -33,7 +33,7 @@ const PlayerFullscreen: React.FC<PlayerFullscreenProps> = ({
         <button className="btn-icon" onClick={onClose} aria-label="Collapse player">
           <ChevronDown size={20} />
         </button>
-        <span style={{ flex: 1, textAlign: "center", fontSize: 12, color: "var(--fg-muted)" }}>
+        <span className="player-fullscreen-heading">
           Now Playing
         </span>
         <button className="btn-icon" onClick={onStop} aria-label="Close player">
@@ -51,37 +51,39 @@ const PlayerFullscreen: React.FC<PlayerFullscreenProps> = ({
         />
 
         <div className="player-fullscreen-panel-body">
-          <div>
-            <div className="player-panel-title">{currentSong.title}</div>
-            <div
-              className="player-panel-artist"
-              style={{ cursor: "pointer", color: "var(--accent)" }}
-              onClick={() => {
-                onClose();
-                navigate(`/albums?artist=${encodeURIComponent(currentSong.artist)}`);
-              }}
-            >
-              {currentSong.artist}
-            </div>
-            {currentSong.albumName && (
+          <div className="player-panel-readout">
+            <div>
+              <div className="player-panel-title">{currentSong.title}</div>
               <div
-                style={{ fontSize: 11, color: "var(--fg-muted)", marginTop: 2, cursor: currentSong.albumId ? "pointer" : "default" }}
+                className="player-panel-artist player-fullscreen-artist"
                 onClick={() => {
-                  if (currentSong.albumId) {
-                    onClose();
-                    navigate(`/album/${currentSong.albumId}`);
-                  }
+                  onClose();
+                  navigate(`/albums?artist=${encodeURIComponent(currentSong.artist)}`);
                 }}
               >
-                {currentSong.albumName}
+                {currentSong.artist}
               </div>
-            )}
-          </div>
+              {currentSong.albumName && (
+                <div
+                  className="player-fullscreen-album"
+                  style={{ cursor: currentSong.albumId ? "pointer" : "default" }}
+                  onClick={() => {
+                    if (currentSong.albumId) {
+                      onClose();
+                      navigate(`/album/${currentSong.albumId}`);
+                    }
+                  }}
+                >
+                  {currentSong.albumName}
+                </div>
+              )}
+            </div>
 
-          <div className="player-progress-section">
-            <span className="player-time">{formatTime(currentTime)}</span>
-            <ProgressBar displayProgress={displayProgress} isDragging={isDragging} onPointerDown={onProgressPointerDown} />
-            <span className="player-time" style={{ textAlign: "right" }}>{formatTime(duration)}</span>
+            <div className="player-progress-section">
+              <span className="player-time">{formatTime(currentTime)}</span>
+              <ProgressBar displayProgress={displayProgress} isDragging={isDragging} onPointerDown={onProgressPointerDown} />
+              <span className="player-time" style={{ textAlign: "right" }}>{formatTime(duration)}</span>
+            </div>
           </div>
 
           <PlayerTransport
@@ -97,7 +99,7 @@ const PlayerFullscreen: React.FC<PlayerFullscreenProps> = ({
             onToggleRepeat={onToggleRepeat}
           />
 
-          <div className="player-controls" style={{ gap: 8 }}>
+          <div className="player-controls player-volume-row" style={{ gap: 8 }}>
             <VolumeBar volume={volume} isMuted={isMuted} isDragging={isVolumeDragging} iconSize={16} onToggleMute={onToggleMute}
               onPointerDown={onVolumePointerDown} wheelRef={volumeWheelRef}
               barStyle={{ flex: 1 }} />

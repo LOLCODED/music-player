@@ -46,3 +46,12 @@
     padding: 0 12px 4px;
   }
 }
+
+body:is([data-skin="itunes"], [data-skin="y2k"]) .player-panel-readout {
+  gap: 6px;
+  padding: 8px 12px 10px;
+  text-align: center;
+}
+body:is([data-skin="itunes"], [data-skin="y2k"]) .player-panel-readout .player-panel-artist { margin-top: 1px; }
+body:is([data-skin="itunes"], [data-skin="y2k"]) .player-panel-readout .player-time { min-width: 28px; font-size: 10px; }
+body:is([data-skin="itunes"], [data-skin="y2k"]) .player-panel-queue-item { margin: 0; border-radius: 0; }
