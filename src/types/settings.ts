@@ -15,6 +15,10 @@ export const MOBILE_PLAYER_POSITIONS = ['top', 'bottom'] as const;
 
 export type MobilePlayerPosition = (typeof MOBILE_PLAYER_POSITIONS)[number];
 
+export const SKINS = ['default', 'itunes', 'y2k', 'futurism'] as const;
+
+export type Skin = (typeof SKINS)[number];
+
 export const ACCENT_HOVER_MAP: Record<string, string> = {
   '#8b5cf6': '#a78bfa',
   '#3b82f6': '#60a5fa',

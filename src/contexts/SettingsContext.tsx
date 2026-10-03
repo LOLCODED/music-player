@@ -9,12 +9,14 @@ import React, {
 import {
   PlayerPosition,
   MobilePlayerPosition,
+  Skin,
   PLAYER_POSITIONS,
   MOBILE_PLAYER_POSITIONS,
+  SKINS,
   ACCENT_HOVER_MAP,
 } from '../types/settings';
 
-export type { PlayerPosition, MobilePlayerPosition } from '../types/settings';
+export type { PlayerPosition, MobilePlayerPosition, Skin } from '../types/settings';
 
 interface SettingsContextType {
   isDarkMode: boolean;
@@ -25,6 +27,8 @@ interface SettingsContextType {
   setPlayerPosition: (pos: PlayerPosition) => void;
   mobilePlayerPosition: MobilePlayerPosition;
   setMobilePlayerPosition: (pos: MobilePlayerPosition) => void;
+  skin: Skin;
+  setSkin: (skin: Skin) => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -76,6 +80,14 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       readStoredSetting('mobilePlayerPosition', MOBILE_PLAYER_POSITIONS, 'bottom')
     );
 
+  const [skin, setSkinState] = useState<Skin>(() =>
+    readStoredSetting('skin', SKINS, 'default')
+  );
+
+  useEffect(() => {
+    document.body.dataset.skin = skin;
+  }, [skin]);
+
   useEffect(() => {
     document.body.classList.toggle('light', !isDarkMode);
     try {
@@ -118,6 +130,15 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, []);
 
+  const setSkin = useCallback((next: Skin) => {
+    setSkinState(next);
+    try {
+      localStorage.setItem('skin', next);
+    } catch {
+      // Ignore storage failures.
+    }
+  }, []);
+
   const value = useMemo(
     () => ({
       isDarkMode,
@@ -128,6 +149,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setPlayerPosition,
       mobilePlayerPosition,
       setMobilePlayerPosition,
+      skin,
+      setSkin,
     }),
     [
       isDarkMode,
@@ -138,6 +161,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setPlayerPosition,
       mobilePlayerPosition,
       setMobilePlayerPosition,
+      skin,
+      setSkin,
     ]
   );
 

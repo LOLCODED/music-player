@@ -4,6 +4,7 @@ import { PlayerPosition } from "../types/settings";
 import { useIsDesktop } from "../hooks/useIsDesktop";
 import { LayoutDiagram } from "../components/LayoutDiagram";
 import { LAYOUT_OPTIONS, FLOATER_CORNERS } from "../components/layoutOptions";
+import SkinPicker from "../components/SkinPicker";
 
 const ACCENT_COLORS = [
   { label: "Purple", value: "#8b5cf6" },
@@ -22,7 +23,7 @@ const MOBILE_POSITIONS = ["bottom", "top"] as const;
 const SettingsPage: React.FC = () => {
   const {
     isDarkMode, toggleTheme, accentColor, setAccentColor,
-    playerPosition, setPlayerPosition, mobilePlayerPosition, setMobilePlayerPosition,
+    playerPosition, setPlayerPosition, mobilePlayerPosition, setMobilePlayerPosition, skin,
   } = useSettings();
   const isDesktop = useIsDesktop();
 
@@ -36,46 +37,55 @@ const SettingsPage: React.FC = () => {
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "0 20px 32px" }}>
-        <div className="settings-section-label">Appearance</div>
+        <div className="settings-section-label">Skin</div>
+        <SkinPicker />
 
-        <div className="settings-row">
-          <span>Theme</span>
-          <button
-            className="settings-pill"
-            style={{ minWidth: 100 }}
-            onClick={toggleTheme}
-          >
-            {isDarkMode ? "🌙 Dark" : "☀️ Light"}
-          </button>
-        </div>
+        {skin === "default" ? (
+          <>
+            <div className="settings-section-label">Appearance</div>
 
-        <div className="settings-section-label">Accent Color</div>
+            <div className="settings-row">
+              <span>Theme</span>
+              <button
+                className="settings-pill"
+                style={{ minWidth: 100 }}
+                onClick={toggleTheme}
+              >
+                {isDarkMode ? "🌙 Dark" : "☀️ Light"}
+              </button>
+            </div>
 
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, paddingTop: 8, paddingBottom: 16 }}>
-          {ACCENT_COLORS.map(c => (
-            <button
-              key={c.value}
-              title={c.label}
-              aria-label={c.label}
-              onClick={() => setAccentColor(c.value)}
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: "50%",
-                background: c.value,
-                border: accentColor === c.value
-                  ? "3px solid var(--fg)"
-                  : "3px solid transparent",
-                outline: accentColor === c.value ? `2px solid ${c.value}` : "none",
-                outlineOffset: 1,
-                cursor: "pointer",
-                padding: 0,
-                transition: "transform 0.1s ease",
-                transform: accentColor === c.value ? "scale(1.15)" : "scale(1)",
-              }}
-            />
-          ))}
-        </div>
+            <div className="settings-section-label">Accent Color</div>
+
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, paddingTop: 8, paddingBottom: 16 }}>
+              {ACCENT_COLORS.map(c => (
+                <button
+                  key={c.value}
+                  title={c.label}
+                  aria-label={c.label}
+                  onClick={() => setAccentColor(c.value)}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: "50%",
+                    background: c.value,
+                    border: accentColor === c.value
+                      ? "3px solid var(--fg)"
+                      : "3px solid transparent",
+                    outline: accentColor === c.value ? `2px solid ${c.value}` : "none",
+                    outlineOffset: 1,
+                    cursor: "pointer",
+                    padding: 0,
+                    transition: "transform 0.1s ease",
+                    transform: accentColor === c.value ? "scale(1.15)" : "scale(1)",
+                  }}
+                />
+              ))}
+            </div>
+          </>
+        ) : (
+          <p className="settings-hint">This skin uses its own colors. Switch back to Default to change theme or accent.</p>
+        )}
 
         {!isDesktop && (
           <>

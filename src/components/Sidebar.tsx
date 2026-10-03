@@ -7,13 +7,6 @@ import { CONNECTIONS_ITEM, NAV_ITEMS, SETTINGS_ITEM, isNavItemActive, type NavIt
 const SIDEBAR_ICON_SIZE = 16;
 
 const FOOTER_LINK_STYLE: React.CSSProperties = { marginTop: "auto" };
-const LOGOUT_BUTTON_STYLE: React.CSSProperties = {
-  width: "100%",
-  background: "none",
-  border: "none",
-  cursor: "pointer",
-  textAlign: "left",
-};
 
 const Sidebar: React.FC = () => {
   const location = useLocation();
@@ -36,7 +29,7 @@ const Sidebar: React.FC = () => {
       {NAV_ITEMS.map((item) => renderLink(item))}
       {renderLink(CONNECTIONS_ITEM, FOOTER_LINK_STYLE)}
       {renderLink(SETTINGS_ITEM)}
-      <button onClick={logout} className="sidebar-nav-link" style={LOGOUT_BUTTON_STYLE}>
+      <button onClick={logout} className="sidebar-nav-link sidebar-logout">
         <LogOut size={SIDEBAR_ICON_SIZE} />
         <span>Logout</span>
       </button>

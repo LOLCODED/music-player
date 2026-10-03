@@ -1,0 +1,191 @@
+body[data-skin="futurism"] {
+  color-scheme: dark;
+  --bg: #04060c;
+  --bg-surface: #07101d;
+  --bg-elevated: #0c1a2e;
+  --fg: #d8f6ff;
+  --fg-muted: #6f9fb5;
+  --fg-dim: #3d5b6e;
+  --border: rgba(0, 229, 255, 0.18);
+  --accent: #00e5ff;
+  --accent-hover: #7ef4ff;
+  --fx-magenta: #ff2bd6;
+  --fx-gradient: linear-gradient(90deg, #00e5ff, #ff2bd6);
+  --fx-glow: 0 0 10px rgba(0, 229, 255, 0.55);
+  --fx-cut: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  --fx-cut-sm: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+  font-family: Eurostile, Michroma, "Bank Gothic", Bahnschrift, "DIN Alternate", "Segoe UI", system-ui, sans-serif;
+  letter-spacing: 0.03em;
+  background-image:
+    radial-gradient(ellipse at 75% -10%, rgba(255, 43, 214, 0.16), transparent 55%),
+    radial-gradient(ellipse at 0% 110%, rgba(0, 229, 255, 0.14), transparent 50%),
+    linear-gradient(rgba(0, 229, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 229, 255, 0.045) 1px, transparent 1px);
+  background-size: auto, auto, 36px 36px, 36px 36px;
+}
+
+body[data-skin="futurism"] ::-webkit-scrollbar-thumb { background: rgba(0, 229, 255, 0.35); border-radius: 0; }
+
+body[data-skin="futurism"] .btn,
+body[data-skin="futurism"] .settings-pill,
+body[data-skin="futurism"] .settings-option-card {
+  background: rgba(0, 229, 255, 0.05);
+  border: 1px solid rgba(0, 229, 255, 0.45);
+  border-radius: 0;
+  color: var(--fg);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  clip-path: var(--fx-cut-sm);
+}
+body[data-skin="futurism"] .btn:hover,
+body[data-skin="futurism"] .settings-pill:hover {
+  background: rgba(0, 229, 255, 0.14);
+  border-color: var(--accent);
+  text-shadow: var(--fx-glow);
+}
+body[data-skin="futurism"] .btn-primary,
+body[data-skin="futurism"] .btn-primary:hover,
+body[data-skin="futurism"] .settings-pill.is-selected {
+  background: var(--fx-gradient);
+  border-color: transparent;
+  color: #04060c;
+  font-weight: 700;
+}
+body[data-skin="futurism"] .settings-option-card.is-selected {
+  background: rgba(0, 229, 255, 0.12);
+  border-color: var(--accent);
+}
+
+body[data-skin="futurism"] input[type="text"],
+body[data-skin="futurism"] input[type="password"],
+body[data-skin="futurism"] input[type="url"],
+body[data-skin="futurism"] input[type="search"],
+body[data-skin="futurism"] select {
+  background: rgba(4, 10, 20, 0.85);
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  border-radius: 0;
+  letter-spacing: 0.08em;
+  clip-path: var(--fx-cut-sm);
+}
+body[data-skin="futurism"] input:focus,
+body[data-skin="futurism"] select:focus { border-color: var(--accent); box-shadow: inset 0 0 12px rgba(0, 229, 255, 0.25); }
+
+body[data-skin="futurism"] .page-header {
+  background: rgba(4, 6, 12, 0.82);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 229, 255, 0.35);
+}
+body[data-skin="futurism"] .page-header-title,
+body[data-skin="futurism"] .settings-section-label,
+body[data-skin="futurism"] .detail-hero-title {
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--accent);
+  text-shadow: var(--fx-glow);
+}
+
+body[data-skin="futurism"] .sidebar {
+  background: rgba(4, 8, 16, 0.85);
+  border-right: 1px solid rgba(0, 229, 255, 0.25);
+}
+body[data-skin="futurism"] .sidebar-nav-link {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  border-left: 2px solid transparent;
+}
+body[data-skin="futurism"] .sidebar-nav-link:hover { background: rgba(0, 229, 255, 0.06); color: var(--accent-hover); }
+body[data-skin="futurism"] .sidebar-nav-link.active {
+  color: var(--accent);
+  border-left-color: var(--accent);
+  background: linear-gradient(90deg, rgba(0, 229, 255, 0.16), transparent);
+  text-shadow: var(--fx-glow);
+}
+
+body[data-skin="futurism"] .album-grid {
+  gap: 18px;
+  padding: 18px;
+  background: transparent;
+}
+body[data-skin="futurism"] .album-card {
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.7), rgba(255, 43, 214, 0.35) 60%, rgba(0, 229, 255, 0.15));
+  clip-path: var(--fx-cut);
+}
+body[data-skin="futurism"] .album-card:hover { background: var(--fx-gradient); }
+body[data-skin="futurism"] .album-card-info { background: #060c18; }
+body[data-skin="futurism"] .album-card-title { text-transform: uppercase; letter-spacing: 0.1em; }
+body[data-skin="futurism"] .album-card-artist { color: var(--fx-magenta); letter-spacing: 0.08em; }
+
+body[data-skin="futurism"] .player-play-btn,
+body[data-skin="futurism"] .album-card-play,
+body[data-skin="futurism"] .table-play-btn {
+  background: var(--fx-gradient);
+  border-radius: 0;
+  color: #04060c;
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+}
+body[data-skin="futurism"] .player-play-btn:hover { filter: brightness(1.2); background: var(--fx-gradient); }
+
+body[data-skin="futurism"] .content-table th,
+body[data-skin="futurism"] .track-row.header {
+  background: rgba(4, 6, 12, 0.92);
+  color: var(--accent);
+  letter-spacing: 0.2em;
+}
+body[data-skin="futurism"] .content-table-row:hover,
+body[data-skin="futurism"] .track-row:hover { background: rgba(0, 229, 255, 0.06); }
+body[data-skin="futurism"] .content-table-row.active,
+body[data-skin="futurism"] .track-row.active { color: var(--accent); text-shadow: var(--fx-glow); }
+
+body[data-skin="futurism"] .detail-hero-art,
+body[data-skin="futurism"] .player-desktop-art,
+body[data-skin="futurism"] .player-mini-art { border-radius: 0; clip-path: var(--fx-cut); }
+
+body[data-skin="futurism"] .player-area,
+body[data-skin="futurism"] .player-mini,
+body[data-skin="futurism"] .tab-btn-bar {
+  background: rgba(4, 8, 16, 0.9);
+  border-color: rgba(0, 229, 255, 0.4);
+  box-shadow: 0 -8px 30px rgba(0, 229, 255, 0.08);
+}
+body[data-skin="futurism"] .player-desktop-title,
+body[data-skin="futurism"] .player-mini-title,
+body[data-skin="futurism"] .player-panel-title {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+body[data-skin="futurism"] .player-desktop-artist,
+body[data-skin="futurism"] .player-mini-artist { color: var(--fx-magenta); }
+
+body[data-skin="futurism"] .progress-bar { height: 2px; border-radius: 0; background: rgba(0, 229, 255, 0.15); }
+body[data-skin="futurism"] .progress-bar:hover { height: 4px; }
+body[data-skin="futurism"] .progress-fill {
+  border-radius: 0;
+  background: var(--fx-gradient);
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.7);
+}
+body[data-skin="futurism"] .progress-handle,
+body[data-skin="futurism"] .volume-handle {
+  width: 8px;
+  height: 8px;
+  border-radius: 0;
+  background: var(--accent);
+  box-shadow: var(--fx-glow);
+  transform: translateY(-50%) rotate(45deg);
+}
+body[data-skin="futurism"] .volume-bar { border-radius: 0; }
+body[data-skin="futurism"] .volume-fill { background: var(--accent); border-radius: 0; }
+
+body[data-skin="futurism"] .tab-btn { text-transform: uppercase; letter-spacing: 0.14em; font-size: 10px; }
+body[data-skin="futurism"] .tab-btn.active { text-shadow: var(--fx-glow); }
+
+body[data-skin="futurism"] .modal-overlay { background: rgba(2, 4, 10, 0.7); backdrop-filter: blur(6px); }
+body[data-skin="futurism"] .modal-box,
+body[data-skin="futurism"] .login-card,
+body[data-skin="futurism"] .player-floater-inner {
+  background: #060c18;
+  border: 1px solid rgba(0, 229, 255, 0.5);
+  border-radius: 0;
+  clip-path: var(--fx-cut);
+}
