@@ -10,7 +10,8 @@
     "test.e2e": "cypress run",
     "test.unit": "vitest run",
     "test.watch": "vitest",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "ios:assets": "cp assets/icon-1024.png ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png && for f in ios/App/App/Assets.xcassets/Splash.imageset/*.png; do cp assets/splash-2732.png \"$f\"; done"
   },
   "dependencies": {
     "@capacitor/app": "7.0.1",

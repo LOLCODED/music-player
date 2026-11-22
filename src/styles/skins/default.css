@@ -148,8 +148,10 @@ body[data-skin="default"] .content-table-num {
   font-weight: 400;
 }
 body[data-skin="default"] .content-table-row.active .content-table-num { color: var(--accent); font-weight: 800; }
-body[data-skin="default"] .content-table-row:hover .content-table-num,
 body[data-skin="default"] .content-table-row:focus-visible .content-table-num { opacity: 0; }
+@media (hover: hover) {
+  body[data-skin="default"] .content-table-row:hover .content-table-num { opacity: 0; }
+}
 body[data-skin="default"] .table-play-btn { border-radius: 2px; background: var(--fg); color: var(--bg); }
 
 body[data-skin="default"] .letter-divider td {

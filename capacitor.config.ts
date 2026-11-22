@@ -7,6 +7,11 @@ const config: CapacitorConfig = {
   appId: 'com.lolcoded.cascade',
   appName: 'Cascade',
   webDir: 'dist',
+  ios: {
+    // The app scrolls inside its own panes; letting the web view itself scroll
+    // slides the whole layout, header included, under the status bar.
+    scrollEnabled: false,
+  },
   plugins: {
     // Native HTTP: the app's capacitor:// origin isn't on servers' CORS lists.
     CapacitorHttp: { enabled: true },

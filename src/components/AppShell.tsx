@@ -12,9 +12,11 @@ import Sidebar from "./Sidebar";
 import TabBar from "./TabBar";
 import GlobalPlayer from "./GlobalPlayer";
 import { useSettings } from "../contexts/SettingsContext";
+import { useEdgeSwipeNavigation } from "../hooks/useEdgeSwipeNavigation";
 
 const AppShell: React.FC = () => {
   const { playerPosition, mobilePlayerPosition } = useSettings();
+  useEdgeSwipeNavigation();
   return (
     <div
       className="app-shell"
