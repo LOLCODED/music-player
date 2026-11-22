@@ -6,6 +6,10 @@
   .mobile-dock { display: contents; }
 }
 
+/* The home indicator is drawn 8–13pt above the bottom edge, so the dock only needs ~20pt of
+   the 34pt inset to clear it; none at all on phones without one. */
+:root { --dock-bottom-inset: min(env(safe-area-inset-bottom), max(20px, env(safe-area-inset-bottom) - 14px)); }
+
 @media (max-width: 767px), (max-height: 499px) {
   /* The dock: mini player and tabs as one sheet running into the home-indicator area. */
   .mobile-dock {
@@ -19,7 +23,7 @@
     color: var(--fg);
     border-radius: var(--dock-radius) var(--dock-radius) 0 0;
     box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.18);
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: var(--dock-bottom-inset);
   }
   .mobile-dock .player-area:empty { display: none; }
 
@@ -71,7 +75,7 @@
     background: var(--dock-bg, var(--bg-surface));
     border-radius: 18px 18px 0 0;
     box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.18);
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: var(--dock-bottom-inset);
     position: relative;
     z-index: 20;
   }
