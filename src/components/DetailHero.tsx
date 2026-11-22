@@ -7,6 +7,7 @@ interface DetailHeroProps {
   subtitle?: string;
   metaLines: string[];
   actions: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 const DetailHero: React.FC<DetailHeroProps> = ({
@@ -15,6 +16,7 @@ const DetailHero: React.FC<DetailHeroProps> = ({
   subtitle,
   metaLines,
   actions,
+  children,
 }) => (
   <div className="detail-hero">
     <img
@@ -36,6 +38,7 @@ const DetailHero: React.FC<DetailHeroProps> = ({
         </div>
       ))}
       <div className="detail-hero-actions">{actions}</div>
+      {children}
     </div>
   </div>
 );

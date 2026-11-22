@@ -18,10 +18,10 @@ export function usePlaylistDetails(
   const [songs, setSongs] = useState<SubsonicSong[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (silent = false) => {
     if (!subsonicService) return;
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const data = await subsonicService.getPlaylist(id);
       setPlaylist(data.playlist);
       setSongs(data.songs);
@@ -47,5 +47,7 @@ export function usePlaylistDetails(
 
   const getCoverArtUrl = useCoverArtUrl(subsonicService);
 
-  return { playlist, songs, loading, removeSong, getCoverArtUrl };
+  const refresh = useCallback(() => load(true), [load]);
+
+  return { playlist, songs, loading, removeSong, refresh, getCoverArtUrl };
 }

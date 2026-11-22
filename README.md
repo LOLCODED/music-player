@@ -17,6 +17,12 @@ npm run dev
 
 Open `http://localhost:5173`, enter your Subsonic server URL and credentials on first launch.
 
+If your server doesn't allow cross-origin requests from localhost, proxy it through the dev server and sign in with `http://localhost:5173` as the server URL:
+
+```bash
+DEV_SERVER_PROXY=https://your-navidrome npm run dev
+```
+
 ## Building
 
 ### Web
@@ -69,6 +75,10 @@ docker compose up -d
 ```
 
 The app will be available on port `4533`. Change the port mapping in `docker-compose.yml` if that conflicts with something else.
+
+### Playlist covers (Navidrome 0.61+)
+
+Uploading a playlist cover uses Navidrome's own API (`/auth/*` and `/api/*`), not the Subsonic one. Serve the player and Navidrome from the same origin by routing `/rest/*`, `/auth/*` and `/api/*` to Navidrome in your reverse proxy. The player asks for your password once per session and stores only Navidrome's session token, never the password.
 
 ## Stack
 
