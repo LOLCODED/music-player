@@ -231,7 +231,6 @@ body[data-skin="default"] .detail-page .page-scroll > div:not(.detail-hero):not(
   body[data-skin="default"] .songs-page .content-table-name { width: 58%; }
 }
 
-/* Phone dock: the sheet in the opposite palette, tabs numbered like tracks */
 @media (max-width: 767px), (max-height: 499px) {
   body[data-skin="default"] .app-shell:not([data-mobile-player-pos="top"]) .mobile-dock,
   body[data-skin="default"] .tab-btn-bar {
@@ -262,7 +261,7 @@ body[data-skin="default"] .detail-page .page-scroll > div:not(.detail-hero):not(
     color: var(--dock-bg, var(--bg));
   }
   body[data-skin="default"] .mobile-dock .progress-fill { background: var(--accent); }
-  body[data-skin="default"] .mobile-dock .player-fullscreen { background: var(--dock-bg); }
+  body[data-skin="default"] .mobile-dock .player-fullscreen { background: var(--dock-bg, var(--bg)); }
   body[data-skin="default"] .detail-hero { align-items: stretch; padding: 20px 20px 22px; }
   body[data-skin="default"] .detail-hero-title { font-size: 34px; }
   body[data-skin="default"] .songs-page .content-table-name { width: auto; }

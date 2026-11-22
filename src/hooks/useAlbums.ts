@@ -28,28 +28,25 @@ const API_SORT: Record<AlbumSortType, ApiSortType> = {
 
 export function useAlbums(subsonicService: SubsonicService | null) {
   const location = useLocation();
+  // An artist link (/albums?artist=…) is its own view: it must not overwrite the plain list's search.
+  const artistQuery = new URLSearchParams(location.search).get("artist");
+  const viewKey = artistQuery ? `albums:artist:${artistQuery}` : "albums";
   const restored = hasCachedState(subsonicService, "albums:list");
   const [albums, setAlbums] = useCachedState<SubsonicAlbum[]>(subsonicService, "albums:list", []);
   const [searchResults, setSearchResults] = useCachedState<SubsonicAlbum[] | null>(
-    subsonicService, "albums:search", null
+    subsonicService, `${viewKey}:search`, null
   );
   const [loading, setLoading] = useState(!restored);
   const [searchLoading, setSearchLoading] = useState(false);
   const [error, setError] = useState("");
   const [hasMore, setHasMore] = useCachedState(subsonicService, "albums:hasMore", true);
-  const [searchText, setSearchText] = useCachedState(subsonicService, "albums:query", "");
+  const [searchText, setSearchText] = useCachedState(subsonicService, `${viewKey}:query`, artistQuery ?? "");
   const [sortType, setSortType] = useCachedState<AlbumSortType>(
     subsonicService, "albums:sort", "alphabeticalByName"
   );
   const offsetRef = useRef(albums.length);
   const loadingRef = useRef(false);
   const loadedForRef = useRef(restored ? { service: subsonicService, sortType } : null);
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const artistQuery = params.get("artist");
-    if (artistQuery) setSearchText(artistQuery);
-  }, [location.search, setSearchText]);
 
   const loadAlbums = useCallback(
     async (reset: boolean = false) => {
@@ -131,6 +128,7 @@ export function useAlbums(subsonicService: SubsonicService | null) {
   const refresh = useCallback(() => loadAlbums(true), [loadAlbums]);
 
   return {
+    viewKey,
     filteredAlbums,
     loading,
     searchLoading,

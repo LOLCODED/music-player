@@ -374,7 +374,6 @@ body[data-skin="y2k"] .player-floater .btn-icon:hover { background: rgba(255, 25
 body[data-skin="y2k"] .player-floater-footer { padding: 0 18px 8px; }
 body[data-skin="y2k"] .player-floater .progress-bar { margin: 0 20px 14px; }
 
-/* Phone dock: one chrome sheet with the LCD readout inside */
 @media (max-width: 767px), (max-height: 499px) {
   body[data-skin="y2k"] .mobile-dock {
     --dock-bg: var(--y2k-chrome);
@@ -399,3 +398,6 @@ body[data-skin="y2k"] .player-floater .progress-bar { margin: 0 20px 14px; }
   body[data-skin="y2k"] .action-sheet-done { background: var(--y2k-chrome); color: #fff; border: 1px solid #000; border-radius: 22px; }
 }
 body[data-skin="y2k"] { --status-band: #5c5f63; }
+@media (max-width: 767px) and (min-height: 500px) {
+  body[data-skin="y2k"] .player-fullscreen-panel-art { margin-left: auto; margin-right: auto; }
+}

@@ -46,7 +46,7 @@ const AlbumsPage: React.FC = () => {
   const shufflePlay = useShufflePlay(showToast);
 
   const {
-    filteredAlbums, loading, searchLoading, error, hasMore,
+    viewKey, filteredAlbums, loading, searchLoading, error, hasMore,
     searchText, sortType, setSearchText, setSortType,
     loadMore, refresh, getCoverArtUrl,
   } = useAlbums(subsonicService);
@@ -63,7 +63,7 @@ const AlbumsPage: React.FC = () => {
   const canLoadMore = hasMore && !searchText.trim();
   const showSpinner = (loading || searchLoading) && filteredAlbums.length === 0;
   const { visible, hasHidden, showMore, ensureVisible } = useRenderWindow(
-    subsonicService, "albums", filteredAlbums, RENDER_PAGE_SIZE
+    subsonicService, viewKey, filteredAlbums, RENDER_PAGE_SIZE
   );
   const sortKey = SORT_KEYS[sortType];
   const searching = searchText.trim() !== "";
@@ -73,7 +73,7 @@ const AlbumsPage: React.FC = () => {
   );
   const keyOf = sortKey ?? ((a: SubsonicAlbum) => a.name);
   const scrollRef = useScrollRestoration<HTMLDivElement>(
-    subsonicService, "albums", !showSpinner && filteredAlbums.length > 0
+    subsonicService, viewKey, !showSpinner && filteredAlbums.length > 0
   );
   const jumpToLetter = useLetterJump(starts, ensureVisible, visible.length, scrollRef);
 

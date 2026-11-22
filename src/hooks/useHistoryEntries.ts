@@ -1,7 +1,6 @@
 import { useCallback, useLayoutEffect, useRef } from "react";
 import { Location, useLocation, useNavigationType } from "react-router-dom";
 
-/** Remembers the locations around the current history entry, so a swipe can show them. */
 export function useHistoryEntries() {
   const location = useLocation();
   const navigationType = useNavigationType();

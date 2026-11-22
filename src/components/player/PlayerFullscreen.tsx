@@ -66,7 +66,6 @@ const NowPlayingVolume: React.FC<PlayerVariantProps> = (props) => (
   </div>
 );
 
-/** Closes after the slide-down animation, or at once when motion is off. */
 function useAnimatedClose(onClose: () => void) {
   const [closing, setClosing] = useState(false);
   const requestClose = useCallback(() => {

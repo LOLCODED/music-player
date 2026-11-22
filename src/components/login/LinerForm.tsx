@@ -31,7 +31,6 @@ function revealField(e: React.FocusEvent<HTMLInputElement>) {
   window.setTimeout(() => field.scrollIntoView({ block: "center", behavior: "smooth" }), KEYBOARD_SETTLE_MS);
 }
 
-/** "Next" on the keyboard moves to the following field instead of submitting early. */
 function advanceOnEnter(e: React.KeyboardEvent<HTMLInputElement>) {
   if (e.key !== "Enter" || e.currentTarget.enterKeyHint !== "next") return;
   const fields = [...(e.currentTarget.form?.querySelectorAll("input") ?? [])];

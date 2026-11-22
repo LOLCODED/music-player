@@ -10,7 +10,6 @@ function setKeyboardOpen(open: boolean) {
   else delete document.body.dataset.keyboard;
 }
 
-/** Marks `body[data-keyboard="open"]` while the on-screen keyboard is up. */
 export function useKeyboardState() {
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {

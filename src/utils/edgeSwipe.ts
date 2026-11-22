@@ -23,20 +23,17 @@ const COMMIT_VELOCITY_PX_PER_MS = 0.5;
 export const UNDER_PARALLAX = 0.3;
 export const MAX_DIM = 0.28;
 
-/** The edge a touch starts on: -1 left (back), 1 right (forward), 0 neither. */
 export function edgeAt(x: number, viewportWidth: number): -1 | 0 | 1 {
   if (x <= EDGE_WIDTH_PX) return -1;
   if (x >= viewportWidth - EDGE_WIDTH_PX) return 1;
   return 0;
 }
 
-/** How far through the swipe the finger is, 0–1. Back swipes move right, forward swipes left. */
 export function swipeProgress(dx: number, width: number, direction: SwipeDirection): number {
   if (width <= 0) return 0;
   return Math.min(1, Math.max(0, (-direction * dx) / width));
 }
 
-/** Release past a third of the screen or with a flick in the swipe's direction commits it. */
 export function shouldCommitSwipe(progress: number, velocityPxPerMs: number, direction: SwipeDirection): boolean {
   const towardCommit = -direction * velocityPxPerMs;
   if (towardCommit < -COMMIT_VELOCITY_PX_PER_MS) return false;

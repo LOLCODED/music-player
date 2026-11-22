@@ -13,7 +13,6 @@ export interface PageLayer {
 
 interface PageStackProps {
   renderRoutes: (location: Location) => React.ReactNode;
-  /** Layers a swipe gesture is driving; while set they replace the resting stack. */
   gestureLayers?: PageLayer[] | null;
 }
 
@@ -23,7 +22,6 @@ function layersFor(transition: PageTransition, from: Location | null, to: Locati
   return [{ location: to, role: "enter-pop" }, { location: from, role: "exit-pop" }];
 }
 
-/** Keeps the outgoing page mounted while the incoming one slides over or under it. */
 function useTransitionLayers(): [PageLayer[], () => void] {
   const location = useLocation();
   const navigationType = useNavigationType();

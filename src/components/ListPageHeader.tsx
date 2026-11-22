@@ -39,7 +39,13 @@ const ListPageHeader: React.FC<ListPageHeaderProps> = ({
   meta,
 }) => {
   const isDesktop = useIsDesktop();
-  const actions = <PageActions onRefresh={onRefresh} title={title} />;
+  const actions = (
+    <PageActions
+      onRefresh={onRefresh}
+      title={title}
+      sort={{ options: sortOptions, value: sortType, onChange: onSortChange }}
+    />
+  );
 
   return (
     <div className="page-header">

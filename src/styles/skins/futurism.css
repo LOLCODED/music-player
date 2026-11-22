@@ -190,7 +190,6 @@ body[data-skin="futurism"] .player-floater-inner {
   clip-path: var(--fx-cut);
 }
 
-/* Phone dock: one glass sheet edged in cyan */
 @media (max-width: 767px), (max-height: 499px) {
   body[data-skin="futurism"] .mobile-dock {
     --dock-bg: rgba(4, 8, 16, 0.94);
@@ -205,8 +204,7 @@ body[data-skin="futurism"] .player-floater-inner {
 
 /* The hexagon clips its own hit area, so on touch it fills the whole 44pt target. */
 @media (pointer: coarse) {
-  body[data-skin="futurism"] .album-card-play,
-  body[data-skin="futurism"] .table-play-btn { padding: 0; background-clip: border-box; }
+  body[data-skin="futurism"] .album-card-play { padding: 0; background-clip: border-box; }
 }
 
 @media (max-width: 767px), (max-height: 499px) {

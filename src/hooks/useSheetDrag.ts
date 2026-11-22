@@ -44,6 +44,8 @@ export function useSheetDrag(
       start = null;
       el.style.transition = "";
       if (dy > DISMISS_DISTANCE_PX || (dy > 24 && velocity > DISMISS_VELOCITY_PX_PER_MS)) {
+        // Continue from the finger's position instead of freezing there until unmount.
+        el.style.transform = "translateY(100%)";
         onDismiss();
       } else {
         el.style.transform = "";

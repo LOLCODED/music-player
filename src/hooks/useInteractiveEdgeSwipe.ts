@@ -59,16 +59,17 @@ function gestureLayers(direction: SwipeDirection, current: Location, neighbor: L
     : [{ location: current, role: "under" }, { location: neighbor, role: "top", gesture: true }];
 }
 
-/** Starts a swipe when a single touch lands on an edge that has history behind it. */
-function beginSwipe(e: TouchEvent, current: Location, neighbor: (offset: -1 | 1) => Location | null, interactive: boolean): [Swipe, Location] | null {
+function beginSwipe(e: TouchEvent, current: Location, neighbor: (offset: -1 | 1) => Location | null, interactive: boolean): [Swipe, Location | null] | null {
   const touch = e.touches[0];
   if (!touch || e.touches.length !== 1) return null;
   if (e.target instanceof Element && e.target.closest(IGNORED_TARGETS)) return null;
   const direction = edgeAt(touch.clientX, window.innerWidth);
   if (direction === 0) return null;
   const target = neighbor(direction);
-  if (!target) return null;
-  const [under, top] = direction === -1 ? [target, current] : [current, target];
+  // After a reload the earlier entries aren't tracked; history can still go back, just without the preview.
+  const canGoBackBlind = !target && direction === -1 && ((window.history.state as { idx?: number } | null)?.idx ?? 0) > 0;
+  if (!target && !canGoBackBlind) return null;
+  const [under, top] = direction === -1 ? [target ?? current, current] : [current, target ?? current];
   return [{
     direction,
     start: { x: touch.clientX, y: touch.clientY },
@@ -76,7 +77,7 @@ function beginSwipe(e: TouchEvent, current: Location, neighbor: (offset: -1 | 1)
     velocity: 0,
     dx: 0,
     active: false,
-    interactive,
+    interactive: interactive && target !== null,
     topKey: top.key,
     underKey: under.key,
   }, target];
@@ -142,23 +143,34 @@ function handleEnd(state: SwipeState, e: TouchEvent, ctx: SwipeContext) {
   }, SETTLE_MS);
 }
 
+/**
+ * The non-passive touchmove listener (needed to stop the page scrolling under a swipe) is only
+ * attached while a touch that began on an edge is down, so ordinary scrolling never waits on it.
+ */
 function attachEdgeSwipe(ctx: SwipeContext): () => void {
   const state: SwipeState = { swipe: null, frame: 0 };
-  const onStart = (e: TouchEvent) => {
-    state.swipe = beginSwipe(e, ctx.current(), ctx.neighbor, ctx.interactive())?.[0] ?? null;
-  };
   const onMove = (e: TouchEvent) => handleMove(state, e, ctx);
-  const onEnd = (e: TouchEvent) => handleEnd(state, e, ctx);
-  window.addEventListener("touchstart", onStart, { passive: true });
-  window.addEventListener("touchmove", onMove, { passive: false });
-  window.addEventListener("touchend", onEnd, { passive: true });
-  window.addEventListener("touchcancel", onEnd, { passive: true });
-  return () => {
-    cancelAnimationFrame(state.frame);
-    window.removeEventListener("touchstart", onStart);
+  const stopTracking = () => {
     window.removeEventListener("touchmove", onMove);
     window.removeEventListener("touchend", onEnd);
     window.removeEventListener("touchcancel", onEnd);
+  };
+  const onEnd = (e: TouchEvent) => {
+    stopTracking();
+    handleEnd(state, e, ctx);
+  };
+  const onStart = (e: TouchEvent) => {
+    state.swipe = beginSwipe(e, ctx.current(), ctx.neighbor, ctx.interactive())?.[0] ?? null;
+    if (!state.swipe) return;
+    window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("touchend", onEnd, { passive: true });
+    window.addEventListener("touchcancel", onEnd, { passive: true });
+  };
+  window.addEventListener("touchstart", onStart, { passive: true });
+  return () => {
+    cancelAnimationFrame(state.frame);
+    window.removeEventListener("touchstart", onStart);
+    stopTracking();
   };
 }
 

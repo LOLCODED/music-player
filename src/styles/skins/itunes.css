@@ -295,7 +295,6 @@ body[data-skin="itunes"] .player-floater-controls .btn-icon {
 body[data-skin="itunes"] .player-floater-controls { gap: 4px; }
 body[data-skin="itunes"] .player-floater .progress-bar { margin: 0 10px 10px; }
 
-/* Phone dock: one brushed-metal sheet */
 @media (max-width: 767px), (max-height: 499px) {
   body[data-skin="itunes"] .mobile-dock {
     --dock-bg: var(--itunes-metal);

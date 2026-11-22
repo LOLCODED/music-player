@@ -1,4 +1,3 @@
-/** Which of `count` equal bands along a strip of `length` px the offset falls in. */
 export function scrubIndex(offset: number, length: number, count: number): number {
   if (count <= 0 || length <= 0) return 0;
   const index = Math.floor((offset / length) * count);

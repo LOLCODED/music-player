@@ -12,7 +12,6 @@ interface Props {
 const MIN_LETTER_PX = 14;
 const TOUCH_QUERY = "(pointer: coarse)";
 
-/** Pins the rail to the page's scroll area so it starts below the header. */
 function useRailBounds(rail: React.RefObject<HTMLElement | null>) {
   const [compact, setCompact] = useState(false);
 
@@ -34,7 +33,6 @@ function useRailBounds(rail: React.RefObject<HTMLElement | null>) {
   return compact;
 }
 
-/** A–Z strip that jumps the list to a letter; drag along it to scrub. */
 const LetterRail: React.FC<Props> = ({ available, onJump }) => {
   const railRef = useRef<HTMLElement>(null);
   const lastLetter = useRef<string | null>(null);

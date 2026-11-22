@@ -1,4 +1,3 @@
-/* Phone layout: portrait phones and landscape phones (too short for the desktop layout). */
 
 .tab-btn-num { display: none; }
 
@@ -11,7 +10,6 @@
 :root { --dock-bottom-inset: min(env(safe-area-inset-bottom), max(20px, env(safe-area-inset-bottom) - 14px)); }
 
 @media (max-width: 767px), (max-height: 499px) {
-  /* The dock: mini player and tabs as one sheet running into the home-indicator area. */
   .mobile-dock {
     --dock-radius: 18px;
     position: relative;
@@ -90,7 +88,6 @@
   .toast-low { bottom: calc(env(safe-area-inset-bottom) + 120px); }
 }
 
-/* Landscape phone: the dock is one row, mini player beside the tabs. */
 @media (max-height: 499px) {
   .mobile-dock {
     --dock-radius: 14px;
@@ -138,18 +135,12 @@
   .album-card-play { right: 2px; }
   .album-card-star { left: 2px; }
   .album-card-delete { bottom: 52px; }
-  .table-play-btn {
-    width: 44px;
-    height: 44px;
-    padding: 12px;
-    background-clip: content-box;
-    left: -12px;
-  }
 }
 
-/* Touch screens can't hover: show what hover would reveal. */
+/* Touch screens can't hover: show what hover would reveal. A list row already plays on tap,
+   so its hover-only play button is dropped rather than shown over the row number. */
 @media (hover: none) {
-  .table-play-btn { opacity: 1; }
+  .content-table-row .table-play-btn { display: none; }
   .player-desktop .player-close-tooltip,
   .player-floater .player-close-tooltip {
     opacity: 1;
@@ -160,7 +151,6 @@
   }
 }
 
-/* Phone page headers: big title in every skin, full-width search, chips below. */
 @media (min-width: 768px) and (min-height: 500px) {
   .page-header .page-title-row.phone-only { display: none; }
 }
@@ -205,12 +195,22 @@
   .page-header-controls .btn-icon:first-of-type { margin-left: 0; }
 }
 
-/* Dialogs become bottom sheets on phones. */
 @keyframes sheet-up {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
 .action-sheet-list { display: flex; flex-direction: column; }
+.action-sheet-list + .action-sheet-list { margin-top: 10px; }
+.action-sheet-heading {
+  padding: 4px 4px 6px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+.action-sheet-label { flex: 1; }
+.action-sheet-item.is-selected { font-weight: 800; }
+.action-sheet-item.is-selected svg:last-child { color: var(--accent); }
 .action-sheet-item {
   display: flex;
   align-items: center;
@@ -271,7 +271,6 @@
 }
 body[data-motion="off"] .modal-box { animation: none; }
 
-/* Phone list view: a two-line row (title, then the other columns) instead of a squeezed table. */
 .content-table-name-sub { display: none; }
 @media (max-width: 767px), (max-height: 499px) {
   .content-table thead { display: none; }
@@ -288,7 +287,6 @@ body[data-motion="off"] .modal-box { animation: none; }
   .content-table td:last-child { width: 44px; max-width: none; padding: 0; overflow: visible; }
 }
 
-/* Touch letter rail: spans the list, scrubs under the finger, shows the letter in a bubble. */
 @media (pointer: coarse) {
   .lettered-page:has(.letter-rail) .page-scroll { padding-right: 32px; }
   .letter-rail {
@@ -333,7 +331,6 @@ body[data-motion="off"] .modal-box { animation: none; }
   body[data-keyboard="open"] .lettered-page .page-scroll { padding-right: 0; }
 }
 
-/* Now Playing: a sheet that slides up from the dock and drags down to close. */
 .player-fullscreen-footer { display: none; }
 @media (max-width: 767px), (max-height: 499px) {
   .player-fullscreen {
@@ -435,7 +432,6 @@ body[data-motion="off"] .modal-box { animation: none; }
 }
 body[data-motion="off"] .player-fullscreen { animation: none; transition: none; }
 
-/* Page layers: one per mounted page; two while a page slides over or under another. */
 .page-layer {
   position: absolute;
   inset: 0;
@@ -528,11 +524,14 @@ body[data-motion="off"] .page-layer { animation: none !important; }
   font-family: inherit;
 }
 
-/* Album and playlist pages on phones: a large centred cover above the title. */
 @media (max-width: 767px) and (min-height: 500px) {
   .detail-hero { flex-direction: column; align-items: stretch; gap: 16px; padding: 20px 20px 18px; }
   .detail-hero-art { width: min(72vw, 320px); height: auto; aspect-ratio: 1; align-self: center; }
   .detail-hero-body { min-width: 0; }
   .detail-hero-title { font-size: 24px; }
   .detail-hero-actions .btn-primary { flex: 1; justify-content: center; }
+}
+@media (max-height: 720px) and (min-height: 500px) {
+  .player-fullscreen-panel-art { max-width: min(100%, 36vh); }
+  .player-fullscreen-panel-body { padding-top: 14px; gap: 12px; }
 }
