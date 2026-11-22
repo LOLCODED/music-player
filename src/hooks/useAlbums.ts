@@ -10,6 +10,8 @@ import {
   SEARCH_DEBOUNCE_MS,
 } from "../utils/constants";
 import { useCoverArtUrl } from "./useCoverArt";
+import { hasCachedState, useCachedState } from "./usePageCache";
+import { fetchAllPages } from "../utils/fetchAllPages";
 
 type ApiSortType = Exclude<AlbumListType, "frequent">;
 export type AlbumSortType = ApiSortType | "alphabeticalByNameDesc" | "alphabeticalByArtistDesc";
@@ -26,22 +28,28 @@ const API_SORT: Record<AlbumSortType, ApiSortType> = {
 
 export function useAlbums(subsonicService: SubsonicService | null) {
   const location = useLocation();
-  const [albums, setAlbums] = useState<SubsonicAlbum[]>([]);
-  const [searchResults, setSearchResults] = useState<SubsonicAlbum[] | null>(null);
-  const [loading, setLoading] = useState(true);
+  const restored = hasCachedState(subsonicService, "albums:list");
+  const [albums, setAlbums] = useCachedState<SubsonicAlbum[]>(subsonicService, "albums:list", []);
+  const [searchResults, setSearchResults] = useCachedState<SubsonicAlbum[] | null>(
+    subsonicService, "albums:search", null
+  );
+  const [loading, setLoading] = useState(!restored);
   const [searchLoading, setSearchLoading] = useState(false);
   const [error, setError] = useState("");
-  const [hasMore, setHasMore] = useState(true);
-  const [searchText, setSearchText] = useState("");
-  const [sortType, setSortType] = useState<AlbumSortType>("alphabeticalByName");
-  const offsetRef = useRef(0);
+  const [hasMore, setHasMore] = useCachedState(subsonicService, "albums:hasMore", true);
+  const [searchText, setSearchText] = useCachedState(subsonicService, "albums:query", "");
+  const [sortType, setSortType] = useCachedState<AlbumSortType>(
+    subsonicService, "albums:sort", "alphabeticalByName"
+  );
+  const offsetRef = useRef(albums.length);
   const loadingRef = useRef(false);
+  const loadedForRef = useRef(restored ? { service: subsonicService, sortType } : null);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const artistQuery = params.get("artist");
     if (artistQuery) setSearchText(artistQuery);
-  }, [location.search]);
+  }, [location.search, setSearchText]);
 
   const loadAlbums = useCallback(
     async (reset: boolean = false) => {
@@ -56,8 +64,11 @@ export function useAlbums(subsonicService: SubsonicService | null) {
         }
         setError("");
         if (isDesc) {
-          // The API has no descending order, so fetch a large page and reverse.
-          const list = await subsonicService.getAlbumList(apiSort, BULK_FETCH_SIZE, 0);
+          // The API has no descending order, so fetch everything and reverse.
+          const list = await fetchAllPages(
+            (count, offset) => subsonicService.getAlbumList(apiSort, count, offset),
+            BULK_FETCH_SIZE
+          );
           setAlbums([...list].reverse());
           setHasMore(false);
         } else {
@@ -75,12 +86,15 @@ export function useAlbums(subsonicService: SubsonicService | null) {
         loadingRef.current = false;
       }
     },
-    [subsonicService, sortType]
+    [subsonicService, sortType, setAlbums, setHasMore]
   );
 
   useEffect(() => {
+    const loaded = loadedForRef.current;
+    if (loaded?.service === subsonicService && loaded.sortType === sortType) return;
+    loadedForRef.current = { service: subsonicService, sortType };
     loadAlbums(true);
-  }, [loadAlbums]);
+  }, [loadAlbums, subsonicService, sortType]);
 
   useEffect(() => {
     const query = searchText.trim();
@@ -106,7 +120,7 @@ export function useAlbums(subsonicService: SubsonicService | null) {
       active = false;
       clearTimeout(timer);
     };
-  }, [searchText, subsonicService]);
+  }, [searchText, subsonicService, setSearchResults]);
 
   const filteredAlbums = useMemo(() => searchResults ?? albums, [searchResults, albums]);
 

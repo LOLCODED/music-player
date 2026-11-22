@@ -11,6 +11,8 @@ import {
   SEARCH_DEBOUNCE_MS,
 } from "../utils/constants";
 import { useCoverArtUrl } from "./useCoverArt";
+import { hasCachedState, useCachedState } from "./usePageCache";
+import { fetchAllPages } from "../utils/fetchAllPages";
 
 export type SongSortType =
   | "titleAsc"
@@ -55,16 +57,22 @@ const BULK_SORTS: SongSortType[] = [
 ];
 
 export function useSongs(subsonicService: SubsonicService | null) {
-  const [songs, setSongs] = useState<SubsonicSong[]>([]);
-  const [searchResults, setSearchResults] = useState<SubsonicSong[] | null>(null);
-  const [loading, setLoading] = useState(true);
+  const restored = hasCachedState(subsonicService, "songs:list");
+  const [songs, setSongs] = useCachedState<SubsonicSong[]>(subsonicService, "songs:list", []);
+  const [searchResults, setSearchResults] = useCachedState<SubsonicSong[] | null>(
+    subsonicService, "songs:search", null
+  );
+  const [loading, setLoading] = useState(!restored);
   const [searchLoading, setSearchLoading] = useState(false);
   const [error, setError] = useState("");
-  const [hasMore, setHasMore] = useState(true);
-  const [searchText, setSearchText] = useState("");
-  const [sortType, setSortType] = useState<SongSortType>("titleAsc");
-  const offsetRef = useRef(0);
+  const [hasMore, setHasMore] = useCachedState(subsonicService, "songs:hasMore", true);
+  const [searchText, setSearchText] = useCachedState(subsonicService, "songs:query", "");
+  const [sortType, setSortType] = useCachedState<SongSortType>(
+    subsonicService, "songs:sort", "titleAsc"
+  );
+  const offsetRef = useRef(songs.length);
   const loadingRef = useRef(false);
+  const loadedForRef = useRef(restored ? { service: subsonicService, sortType } : null);
 
   const loadSongs = useCallback(
     async (reset: boolean = false) => {
@@ -86,7 +94,10 @@ export function useSongs(subsonicService: SubsonicService | null) {
         }
         setError("");
         if (isBulk) {
-          const list = await subsonicService.getSongs(BULK_FETCH_SIZE, 0);
+          const list = await fetchAllPages(
+            (count, offset) => subsonicService.getSongs(count, offset),
+            BULK_FETCH_SIZE
+          );
           setSongs(sortSongs(list, sortType));
           setHasMore(false);
         } else {
@@ -104,12 +115,15 @@ export function useSongs(subsonicService: SubsonicService | null) {
         loadingRef.current = false;
       }
     },
-    [subsonicService, sortType]
+    [subsonicService, sortType, setSongs, setHasMore]
   );
 
   useEffect(() => {
+    const loaded = loadedForRef.current;
+    if (loaded?.service === subsonicService && loaded.sortType === sortType) return;
+    loadedForRef.current = { service: subsonicService, sortType };
     loadSongs(true);
-  }, [loadSongs]);
+  }, [loadSongs, subsonicService, sortType]);
 
   // Text search — debounced, bypasses pagination
   useEffect(() => {
@@ -136,7 +150,7 @@ export function useSongs(subsonicService: SubsonicService | null) {
       active = false;
       clearTimeout(timer);
     };
-  }, [searchText, subsonicService]);
+  }, [searchText, subsonicService, setSearchResults]);
 
   const visibleSongs = useMemo(() => searchResults ?? songs, [searchResults, songs]);
 

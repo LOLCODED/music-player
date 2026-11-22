@@ -1,17 +1,24 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { SubsonicSong, SubsonicAlbum } from "../types/subsonic";
 import { SubsonicService } from "../services/SubsonicService";
 import { toErrorMessage } from "../utils/errors";
 import { useCoverArtUrl } from "./useCoverArt";
+import { hasCachedState, useCachedState } from "./usePageCache";
 
 export type FavoritesSection = "songs" | "albums";
 
 export function useFavorites(subsonicService: SubsonicService | null) {
-  const [allSongs, setAllSongs] = useState<SubsonicSong[]>([]);
-  const [allAlbums, setAllAlbums] = useState<SubsonicAlbum[]>([]);
-  const [loading, setLoading] = useState(true);
+  const restored = hasCachedState(subsonicService, "favorites:songs");
+  const [allSongs, setAllSongs] = useCachedState<SubsonicSong[]>(
+    subsonicService, "favorites:songs", []
+  );
+  const [allAlbums, setAllAlbums] = useCachedState<SubsonicAlbum[]>(
+    subsonicService, "favorites:albums", []
+  );
+  const [loading, setLoading] = useState(!restored);
   const [error, setError] = useState("");
-  const [searchText, setSearchText] = useState("");
+  const [searchText, setSearchText] = useCachedState(subsonicService, "favorites:query", "");
+  const loadedForRef = useRef(restored ? subsonicService : null);
 
   const loadFavorites = useCallback(async () => {
     if (!subsonicService) return;
@@ -26,11 +33,13 @@ export function useFavorites(subsonicService: SubsonicService | null) {
     } finally {
       setLoading(false);
     }
-  }, [subsonicService]);
+  }, [subsonicService, setAllSongs, setAllAlbums]);
 
   useEffect(() => {
+    if (loadedForRef.current === subsonicService) return;
+    loadedForRef.current = subsonicService;
     loadFavorites();
-  }, [loadFavorites]);
+  }, [loadFavorites, subsonicService]);
 
   const unstarSong = useCallback(
     async (id: string) => {
@@ -38,7 +47,7 @@ export function useFavorites(subsonicService: SubsonicService | null) {
       await subsonicService.unstar(id, "song");
       setAllSongs((prev) => prev.filter((s) => s.id !== id));
     },
-    [subsonicService]
+    [subsonicService, setAllSongs]
   );
 
   const unstarAlbum = useCallback(
@@ -47,7 +56,7 @@ export function useFavorites(subsonicService: SubsonicService | null) {
       await subsonicService.unstar(id, "album");
       setAllAlbums((prev) => prev.filter((a) => a.id !== id));
     },
-    [subsonicService]
+    [subsonicService, setAllAlbums]
   );
 
   const getCoverArtUrl = useCoverArtUrl(subsonicService);

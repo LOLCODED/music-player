@@ -6,6 +6,7 @@ import { toErrorMessage } from "../utils/errors";
 import { shuffleArray } from "../utils/shuffle";
 import { GRID_PAGE_SIZE } from "../utils/constants";
 import { useCoverArtUrl } from "./useCoverArt";
+import { hasCachedState, useCachedState } from "./usePageCache";
 
 export type PlaylistSortType =
   | "nameAsc"
@@ -59,12 +60,20 @@ export function usePlaylists(
     onErrorRef.current = onError;
   });
 
-  const [allPlaylists, setAllPlaylists] = useState<SubsonicPlaylist[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [visibleCount, setVisibleCount] = useState(GRID_PAGE_SIZE);
-  const [sortType, setSortType] = useState<PlaylistSortType>("nameAsc");
-  const [searchText, setSearchText] = useState("");
+  const restored = hasCachedState(subsonicService, "playlists:list");
+  const [allPlaylists, setAllPlaylists] = useCachedState<SubsonicPlaylist[]>(
+    subsonicService, "playlists:list", []
+  );
+  const [loading, setLoading] = useState(!restored);
+  const [visibleCount, setVisibleCount] = useCachedState(
+    subsonicService, "playlists:visible", GRID_PAGE_SIZE
+  );
+  const [sortType, setSortType] = useCachedState<PlaylistSortType>(
+    subsonicService, "playlists:sort", "nameAsc"
+  );
+  const [searchText, setSearchText] = useCachedState(subsonicService, "playlists:query", "");
   const loadingRef = useRef(false);
+  const fetchedForRef = useRef(restored ? subsonicService : null);
 
   const fetchAllPlaylists = useCallback(async () => {
     if (!isAuthenticated || !subsonicService || loadingRef.current) return;
@@ -78,22 +87,28 @@ export function usePlaylists(
       setLoading(false);
       loadingRef.current = false;
     }
-  }, [subsonicService, isAuthenticated]);
+  }, [subsonicService, isAuthenticated, setAllPlaylists]);
 
   useEffect(() => {
+    if (!isAuthenticated || fetchedForRef.current === subsonicService) return;
+    fetchedForRef.current = subsonicService;
     fetchAllPlaylists();
-  }, [fetchAllPlaylists]);
+  }, [fetchAllPlaylists, isAuthenticated, subsonicService]);
 
   // Sorted once per source/sort change so "random" keeps a stable order
   // across pagination and searches.
-  const sortedPlaylists = useMemo(
-    () => sortPlaylists(allPlaylists, sortType),
-    [allPlaylists, sortType]
+  const [sortedPlaylists, setSortedPlaylists] = useCachedState<SubsonicPlaylist[]>(
+    subsonicService, "playlists:sorted", []
   );
+  const sortedForRef = useRef(restored ? { allPlaylists, sortType } : null);
 
   useEffect(() => {
+    const sortedFor = sortedForRef.current;
+    if (sortedFor?.allPlaylists === allPlaylists && sortedFor.sortType === sortType) return;
+    sortedForRef.current = { allPlaylists, sortType };
+    setSortedPlaylists(sortPlaylists(allPlaylists, sortType));
     setVisibleCount(GRID_PAGE_SIZE);
-  }, [sortedPlaylists]);
+  }, [allPlaylists, sortType, setSortedPlaylists, setVisibleCount]);
 
   const query = searchText.trim().toLowerCase();
   const filteredPlaylists = useMemo(() => {
@@ -105,7 +120,7 @@ export function usePlaylists(
 
   const loadMore = useCallback(() => {
     setVisibleCount((count) => count + GRID_PAGE_SIZE);
-  }, []);
+  }, [setVisibleCount]);
 
   const createPlaylist = useCallback(
     async (name: string) => {

@@ -3,6 +3,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useMusicPlayer } from "../contexts/MusicPlayerContext";
 import { useSongs, SongSortType } from "../hooks/useSongs";
 import { useViewMode } from "../hooks/useViewMode";
+import { useScrollRestoration } from "../hooks/usePageCache";
 import { useStarToggle } from "../hooks/useStarToggle";
 import { useToast } from "../hooks/useToast";
 import { formatTrackDuration } from "../utils/duration";
@@ -48,6 +49,9 @@ const SongsPage: React.FC = () => {
 
   const canLoadMore = hasMore && !searchText.trim();
   const showSpinner = (loading || searchLoading) && songs.length === 0;
+  const scrollRef = useScrollRestoration<HTMLDivElement>(
+    subsonicService, "songs", !showSpinner && songs.length > 0
+  );
 
   return (
     <div className="page">
@@ -63,7 +67,7 @@ const SongsPage: React.FC = () => {
         onRefresh={refresh}
       />
 
-      <div className="page-scroll">
+      <div className="page-scroll" ref={scrollRef}>
         {showSpinner ? (
           <CenteredSpinner />
         ) : songs.length === 0 ? (

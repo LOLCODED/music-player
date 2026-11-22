@@ -4,6 +4,7 @@ import { SubsonicAlbum } from "../types/subsonic";
 import { useAuth } from "../contexts/AuthContext";
 import { useAlbums, AlbumSortType } from "../hooks/useAlbums";
 import { useViewMode } from "../hooks/useViewMode";
+import { useScrollRestoration } from "../hooks/usePageCache";
 import { useStarToggle } from "../hooks/useStarToggle";
 import { useToast } from "../hooks/useToast";
 import { useShufflePlay } from "../hooks/useShufflePlay";
@@ -58,6 +59,9 @@ const AlbumsPage: React.FC = () => {
   const openAlbum = (album: SubsonicAlbum) => navigate(`/album/${album.id}`);
   const canLoadMore = hasMore && !searchText.trim();
   const showSpinner = (loading || searchLoading) && filteredAlbums.length === 0;
+  const scrollRef = useScrollRestoration<HTMLDivElement>(
+    subsonicService, "albums", !showSpinner && filteredAlbums.length > 0
+  );
 
   return (
     <div className="page">
@@ -73,7 +77,7 @@ const AlbumsPage: React.FC = () => {
         onRefresh={refresh}
       />
 
-      <div className="page-scroll">
+      <div className="page-scroll" ref={scrollRef}>
         {showSpinner ? (
           <CenteredSpinner />
         ) : filteredAlbums.length === 0 ? (

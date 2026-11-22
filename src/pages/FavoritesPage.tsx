@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React from "react";
+import { useCachedState, useScrollRestoration } from "../hooks/usePageCache";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useMusicPlayer } from "../contexts/MusicPlayerContext";
@@ -51,7 +52,9 @@ const FavoritesPage: React.FC = () => {
   const { subsonicService } = useAuth();
   const { playSong, isCurrentSong, isPlaying } = useMusicPlayer();
   const navigate = useNavigate();
-  const [section, setSection] = useState<FavoritesSection>("songs");
+  const [section, setSection] = useCachedState<FavoritesSection>(
+    subsonicService, "favorites:section", "songs"
+  );
   const [viewMode, setViewMode] = useViewMode("viewMode:favorites");
   const { toast, showToast } = useToast();
   const shufflePlay = useShufflePlay(showToast);
@@ -109,6 +112,9 @@ const FavoritesPage: React.FC = () => {
         }));
 
   const showSpinner = loading && items.length === 0;
+  const scrollRef = useScrollRestoration<HTMLDivElement>(
+    subsonicService, "favorites", !showSpinner && items.length > 0
+  );
 
   return (
     <div className="page">
@@ -124,7 +130,7 @@ const FavoritesPage: React.FC = () => {
         onRefresh={refresh}
       />
 
-      <div className="page-scroll">
+      <div className="page-scroll" ref={scrollRef}>
         {showSpinner ? (
           <CenteredSpinner />
         ) : items.length === 0 ? (

@@ -5,6 +5,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { SubsonicPlaylist } from "../types/subsonic";
 import { buildPseudoAlbum } from "../utils/playlist";
 import { usePlaylists, PlaylistSortType } from "../hooks/usePlaylists";
+import { useScrollRestoration } from "../hooks/usePageCache";
 import { useViewMode } from "../hooks/useViewMode";
 import { useToast } from "../hooks/useToast";
 import { useShufflePlay } from "../hooks/useShufflePlay";
@@ -49,6 +50,9 @@ const PlaylistsPage: React.FC = () => {
     searchText, setSearchText, loadMore, refresh,
     createPlaylist, deletePlaylist, getCoverArtUrl,
   } = usePlaylists(subsonicService, isAuthenticated, showToast);
+  const scrollRef = useScrollRestoration<HTMLDivElement>(
+    subsonicService, "playlists", playlists.length > 0
+  );
 
   const handleCreate = async (name: string) => {
     try {
@@ -105,7 +109,7 @@ const PlaylistsPage: React.FC = () => {
         }
       />
 
-      <div className="page-scroll">
+      <div className="page-scroll" ref={scrollRef}>
         {loading && playlists.length === 0 ? (
           <CenteredSpinner />
         ) : playlists.length === 0 ? (
