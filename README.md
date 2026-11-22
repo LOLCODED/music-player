@@ -46,12 +46,14 @@ Build and run from Android Studio, or use `npx cap run android` to deploy direct
 ### iOS
 
 ```bash
+git pull
+npm ci
 npm run build
 npx cap sync ios
 npx cap open ios
 ```
 
-Build and run from Xcode. Requires a Mac and a valid Apple developer account for device deployment.
+`cap sync` copies the web build into the app and writes `ios/App/App/capacitor.config.json` (it holds the keyboard settings), so run it after every pull, not just after adding plugins. In Xcode, pick your iPhone as the run destination, set your team under Signing & Capabilities for the App target, and press ⌘R. If Xcode complains about Swift packages, use File › Packages › Reset Package Caches. Requires a Mac and an Apple developer account for device deployment.
 
 ## Self-hosting with Docker
 
