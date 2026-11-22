@@ -1,5 +1,5 @@
 import React from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Location, Navigate, Route, Routes } from "react-router-dom";
 import AlbumsPage from "../pages/AlbumsPage";
 import AlbumDetailsPage from "../pages/AlbumDetailsPage";
 import PlaylistsPage from "../pages/PlaylistsPage";
@@ -13,6 +13,23 @@ import TabBar from "./TabBar";
 import GlobalPlayer from "./GlobalPlayer";
 import { useSettings } from "../contexts/SettingsContext";
 import { useEdgeSwipeNavigation } from "../hooks/useEdgeSwipeNavigation";
+import PageStack from "./PageStack";
+
+function renderRoutes(location: Location) {
+  return (
+    <Routes location={location}>
+      <Route path="/albums" element={<AlbumsPage />} />
+      <Route path="/album/:id" element={<AlbumDetailsPage />} />
+      <Route path="/playlists" element={<PlaylistsPage />} />
+      <Route path="/playlist/:id" element={<PlaylistDetailsPage />} />
+      <Route path="/songs" element={<SongsPage />} />
+      <Route path="/favorites" element={<FavoritesPage />} />
+      <Route path="/connections" element={<ConnectionsPage />} />
+      <Route path="/settings" element={<SettingsPage />} />
+      <Route path="*" element={<Navigate to="/albums" replace />} />
+    </Routes>
+  );
+}
 
 const AppShell: React.FC = () => {
   const { playerPosition, mobilePlayerPosition } = useSettings();
@@ -25,17 +42,7 @@ const AppShell: React.FC = () => {
     >
       <Sidebar />
       <div className="app-content">
-        <Routes>
-          <Route path="/albums" element={<AlbumsPage />} />
-          <Route path="/album/:id" element={<AlbumDetailsPage />} />
-          <Route path="/playlists" element={<PlaylistsPage />} />
-          <Route path="/playlist/:id" element={<PlaylistDetailsPage />} />
-          <Route path="/songs" element={<SongsPage />} />
-          <Route path="/favorites" element={<FavoritesPage />} />
-          <Route path="/connections" element={<ConnectionsPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="*" element={<Navigate to="/albums" replace />} />
-        </Routes>
+        <PageStack renderRoutes={renderRoutes} />
       </div>
       <div className="mobile-dock">
         <div className="player-area">

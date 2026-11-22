@@ -428,3 +428,49 @@ body[data-motion="off"] .modal-box { animation: none; }
   .player-play-btn.sheet { width: 60px; height: 60px; }
 }
 body[data-motion="off"] .player-fullscreen { animation: none; transition: none; }
+
+/* Page layers: one per mounted page; two while a page slides over or under another. */
+.page-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+.page-layer > * { flex: 1; min-height: 0; }
+.page-layer-under,
+.page-layer-exit-push,
+.page-layer-exit-pop { pointer-events: none; }
+
+@keyframes page-enter-push { from { transform: translateX(100%); } }
+@keyframes page-exit-push { to { transform: translateX(-30%); } }
+@keyframes page-enter-pop { from { transform: translateX(-30%); } }
+@keyframes page-exit-pop { to { transform: translateX(100%); } }
+@keyframes page-dim-in { to { opacity: 0.28; } }
+@keyframes page-dim-out { from { opacity: 0.28; } }
+
+@media (max-width: 767px), (max-height: 499px) {
+  .page-layer[class*="-push"],
+  .page-layer[class*="-pop"],
+  .page-layer-under,
+  .page-layer-top.page-layer-gesture { background-color: var(--bg); }
+  .page-layer-enter-push,
+  .page-layer-exit-pop { z-index: 2; box-shadow: -12px 0 32px rgba(0, 0, 0, 0.28); }
+  .page-layer-enter-push { animation: page-enter-push 0.34s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .page-layer-exit-push { animation: page-exit-push 0.34s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+  .page-layer-enter-pop { animation: page-enter-pop 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .page-layer-exit-pop { animation: page-exit-pop 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+  .page-layer-exit-push::after,
+  .page-layer-enter-pop::after,
+  .page-layer-under::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: #000;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 50;
+  }
+  .page-layer-exit-push::after { animation: page-dim-in 0.34s ease forwards; }
+  .page-layer-enter-pop::after { animation: page-dim-out 0.3s ease forwards; }
+}
+body[data-motion="off"] .page-layer { animation: none !important; }

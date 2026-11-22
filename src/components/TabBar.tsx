@@ -4,6 +4,7 @@ import { NAV_ITEMS, isNavItemActive } from "./navItems";
 import { trackNumber } from "../utils/trackNumber";
 
 const TAB_ICON_SIZE = 20;
+const TAB_STATE = { tab: true };
 
 const TabBar: React.FC = () => {
   const location = useLocation();
@@ -16,6 +17,7 @@ const TabBar: React.FC = () => {
           <Link
             key={item.to}
             to={item.to}
+            state={TAB_STATE}
             className={`tab-btn${active ? " active" : ""}`}
             aria-current={active ? "page" : undefined}
           >
