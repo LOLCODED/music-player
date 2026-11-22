@@ -215,3 +215,6 @@ body[data-skin="futurism"] .player-floater-inner {
   body[data-skin="futurism"] .page-title-row { border-bottom: 1px solid rgba(0, 229, 255, 0.5); }
   body[data-skin="futurism"] .action-sheet-done { background: var(--fx-gradient); color: #04060c; border-radius: 0; clip-path: var(--fx-cut-sm); }
 }
+@media (max-width: 767px), (max-height: 499px) {
+  body[data-skin="futurism"] .player-fullscreen { background: var(--bg); }
+}

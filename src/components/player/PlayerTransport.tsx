@@ -3,7 +3,7 @@ import { Pause, Play, SkipBack, SkipForward, Shuffle, Repeat, Repeat1 } from "lu
 import { RepeatMode } from "../../types/player";
 import Spinner from "./Spinner";
 
-export type TransportSize = "default" | "large";
+export type TransportSize = "default" | "large" | "sheet";
 
 const TRANSPORT_SIZES: Record<
   TransportSize,
@@ -28,6 +28,13 @@ const TRANSPORT_SIZES: Record<
     playIcon: 22,
     spinner: 18,
     playButtonClass: "player-play-btn large",
+  },
+  sheet: {
+    toggleIcon: 20,
+    skipIcon: 30,
+    playIcon: 30,
+    spinner: 22,
+    playButtonClass: "player-play-btn sheet",
   },
 };
 
