@@ -1,22 +1,21 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { SubsonicAlbum } from "../types/subsonic";
 import { useAuth } from "../contexts/AuthContext";
 import { useAlbums, AlbumSortType } from "../hooks/useAlbums";
 import { useViewMode } from "../hooks/useViewMode";
 import { useRenderWindow } from "../hooks/useRenderWindow";
+import { useLetterJump } from "../hooks/useLetterJump";
+import { letterStarts, withoutLeadingArticle } from "../utils/letterGroups";
+import LetterRail from "../components/LetterRail";
+import AlbumCollection from "../components/AlbumCollection";
 import { useScrollRestoration } from "../hooks/usePageCache";
 import { useStarToggle } from "../hooks/useStarToggle";
 import { useToast } from "../hooks/useToast";
 import { useShufflePlay } from "../hooks/useShufflePlay";
-import { formatTotalDuration } from "../utils/duration";
 import ScrollSentinel from "../components/ScrollSentinel";
 import ListPageHeader from "../components/ListPageHeader";
 import CenteredSpinner from "../components/CenteredSpinner";
-import MediaCard from "../components/MediaCard";
-import MediaTable, { MediaTableHeader } from "../components/MediaTable";
-import MediaTableRow from "../components/MediaTableRow";
-import StarActionButton from "../components/StarActionButton";
 import Toast from "../components/Toast";
 
 const RENDER_PAGE_SIZE = 100;
@@ -31,11 +30,12 @@ const SORT_OPTIONS = [
   { value: "random", label: "Random" },
 ];
 
-const TABLE_HEADERS: MediaTableHeader[] = [
-  { label: "Title" },
-  { label: "Artist" },
-  { label: "Time", align: "right", width: 56 },
-];
+const SORT_KEYS: Partial<Record<AlbumSortType, (album: SubsonicAlbum) => string>> = {
+  alphabeticalByName: (a) => withoutLeadingArticle(a.name),
+  alphabeticalByNameDesc: (a) => withoutLeadingArticle(a.name),
+  alphabeticalByArtist: (a) => withoutLeadingArticle(a.artist),
+  alphabeticalByArtistDesc: (a) => withoutLeadingArticle(a.artist),
+};
 
 const AlbumsPage: React.FC = () => {
   const { subsonicService } = useAuth();
@@ -62,15 +62,23 @@ const AlbumsPage: React.FC = () => {
   const openAlbum = (album: SubsonicAlbum) => navigate(`/album/${album.id}`);
   const canLoadMore = hasMore && !searchText.trim();
   const showSpinner = (loading || searchLoading) && filteredAlbums.length === 0;
-  const { visible, hasHidden, showMore } = useRenderWindow(
+  const { visible, hasHidden, showMore, ensureVisible } = useRenderWindow(
     subsonicService, "albums", filteredAlbums, RENDER_PAGE_SIZE
   );
+  const sortKey = SORT_KEYS[sortType];
+  const searching = searchText.trim() !== "";
+  const starts = useMemo(
+    () => (sortKey && !searching ? letterStarts(filteredAlbums, sortKey) : null),
+    [filteredAlbums, sortKey, searching]
+  );
+  const jumpToLetter = useLetterJump(starts, ensureVisible, visible.length);
+  const keyOf = sortKey ?? ((a: SubsonicAlbum) => a.name);
   const scrollRef = useScrollRestoration<HTMLDivElement>(
     subsonicService, "albums", !showSpinner && filteredAlbums.length > 0
   );
 
   return (
-    <div className="page">
+    <div className="page lettered-page">
       <ListPageHeader
         title="Albums"
         searchText={searchText}
@@ -91,49 +99,17 @@ const AlbumsPage: React.FC = () => {
           <div className="empty-state">No albums found</div>
         ) : (
           <>
-            {viewMode === "grid" ? (
-              <div className="album-grid">
-                {visible.map((album, i) => {
-                  const starred = isStarred(album.id, album.starred);
-                  return (
-                    <MediaCard
-                      index={i}
-                      key={album.id}
-                      imageUrl={getCoverArtUrl(album.coverArt)}
-                      title={album.name}
-                      subtitle={album.artist}
-                      starred={starred}
-                      onClick={() => openAlbum(album)}
-                      onPlay={() => handlePlay(album)}
-                      onToggleStar={(e) => toggleStar(album.id, "album", starred, e)}
-                    />
-                  );
-                })}
-              </div>
-            ) : (
-              <MediaTable headers={TABLE_HEADERS}>
-                {visible.map((album, i) => {
-                  const starred = isStarred(album.id, album.starred);
-                  return (
-                    <MediaTableRow
-                      index={i}
-                      key={album.id}
-                      title={album.name}
-                      cells={[album.artist]}
-                      time={formatTotalDuration(album.duration)}
-                      onClick={() => openAlbum(album)}
-                      onPlay={() => handlePlay(album)}
-                      trailingAction={
-                        <StarActionButton
-                          starred={starred}
-                          onClick={(e) => toggleStar(album.id, "album", starred, e)}
-                        />
-                      }
-                    />
-                  );
-                })}
-              </MediaTable>
-            )}
+            <AlbumCollection
+              albums={visible}
+              viewMode={viewMode}
+              letterStarts={starts}
+              sortKey={keyOf}
+              isStarred={isStarred}
+              toggleStar={toggleStar}
+              onOpen={openAlbum}
+              onPlay={handlePlay}
+              getCoverArtUrl={getCoverArtUrl}
+            />
             <ScrollSentinel
               onVisible={hasHidden ? showMore : loadMore}
               hasMore={hasHidden || canLoadMore}
@@ -144,6 +120,7 @@ const AlbumsPage: React.FC = () => {
         )}
       </div>
 
+      {starts && <LetterRail available={new Set(starts.keys())} onJump={jumpToLetter} />}
       <Toast message={toast} />
       <Toast message={error} className="toast-low" />
     </div>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -7,6 +7,10 @@ import { buildPseudoAlbum } from "../utils/playlist";
 import { usePlaylists, PlaylistSortType } from "../hooks/usePlaylists";
 import { useScrollRestoration } from "../hooks/usePageCache";
 import { usePlaylistCoverPicker } from "../hooks/usePlaylistCoverPicker";
+import { useLetterJump } from "../hooks/useLetterJump";
+import { letterStarts } from "../utils/letterGroups";
+import { gridHeading, tableHeading, withLetterHeadings } from "../utils/letterDividers";
+import LetterRail from "../components/LetterRail";
 import { useViewMode } from "../hooks/useViewMode";
 import { useToast } from "../hooks/useToast";
 import { useShufflePlay } from "../hooks/useShufflePlay";
@@ -37,6 +41,11 @@ const TABLE_HEADERS: MediaTableHeader[] = [
   { label: "Duration" },
 ];
 
+const TABLE_COLUMNS = TABLE_HEADERS.length + 1;
+const NAME_SORTS: PlaylistSortType[] = ["nameAsc", "nameDesc"];
+const byName = (p: SubsonicPlaylist) => p.name;
+const noWindow = () => {};
+
 const PlaylistsPage: React.FC = () => {
   const { subsonicService, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -54,6 +63,11 @@ const PlaylistsPage: React.FC = () => {
   const scrollRef = useScrollRestoration<HTMLDivElement>(
     subsonicService, "playlists", playlists.length > 0
   );
+  const starts = useMemo(
+    () => (NAME_SORTS.includes(sortType) && !searchText.trim() ? letterStarts(playlists, byName) : null),
+    [playlists, sortType, searchText]
+  );
+  const jumpToLetter = useLetterJump(starts, noWindow, playlists.length);
   const cover = usePlaylistCoverPicker(() => {
     showToast("Cover updated");
     void refresh();
@@ -91,7 +105,7 @@ const PlaylistsPage: React.FC = () => {
     navigate(`/playlist/${playlist.id}`);
 
   return (
-    <div className="page">
+    <div className="page lettered-page">
       <ListPageHeader
         title="Playlists"
         searchText={searchText}
@@ -130,7 +144,7 @@ const PlaylistsPage: React.FC = () => {
           <>
             {viewMode === "grid" ? (
               <div className="album-grid">
-                {playlists.map((playlist, i) => (
+                {withLetterHeadings(playlists, starts, byName, (playlist, i) => (
                   <MediaCard
                     index={i}
                     key={playlist.id}
@@ -143,11 +157,11 @@ const PlaylistsPage: React.FC = () => {
                     onUploadCover={() => cover.pick(playlist.id)}
                     uploadingCover={cover.uploadingId === playlist.id}
                   />
-                ))}
+                ), gridHeading)}
               </div>
             ) : (
               <MediaTable headers={TABLE_HEADERS}>
-                {playlists.map((playlist, i) => (
+                {withLetterHeadings(playlists, starts, byName, (playlist, i) => (
                   <MediaTableRow
                     index={i}
                     key={playlist.id}
@@ -171,7 +185,7 @@ const PlaylistsPage: React.FC = () => {
                       </button>
                     }
                   />
-                ))}
+                ), (letter, anchor, i) => tableHeading(TABLE_COLUMNS, letter, anchor, i))}
               </MediaTable>
             )}
             <ScrollSentinel
@@ -202,6 +216,7 @@ const PlaylistsPage: React.FC = () => {
         />
       )}
 
+      {starts && <LetterRail available={new Set(starts.keys())} onJump={jumpToLetter} />}
       <Toast message={toast} />
     </div>
   );

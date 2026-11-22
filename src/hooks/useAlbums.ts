@@ -56,6 +56,7 @@ export function useAlbums(subsonicService: SubsonicService | null) {
       if (!subsonicService || loadingRef.current) return;
       loadingRef.current = true;
       const isDesc = sortType.endsWith("Desc");
+      const loadAll = sortType.startsWith("alphabetical");
       const apiSort = API_SORT[sortType];
       try {
         if (reset) {
@@ -63,13 +64,14 @@ export function useAlbums(subsonicService: SubsonicService | null) {
           offsetRef.current = 0;
         }
         setError("");
-        if (isDesc) {
-          // The API has no descending order, so fetch everything and reverse.
+        if (loadAll) {
+          // Alphabetical lists load fully so letter headings and the A-Z rail
+          // cover every album; the API has no descending order, so reverse.
           const list = await fetchAllPages(
             (count, offset) => subsonicService.getAlbumList(apiSort, count, offset),
             BULK_FETCH_SIZE
           );
-          setAlbums([...list].reverse());
+          setAlbums(isDesc ? [...list].reverse() : list);
           setHasMore(false);
         } else {
           const offset = reset ? 0 : offsetRef.current;

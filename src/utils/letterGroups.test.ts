@@ -1,4 +1,4 @@
-import { letterAnchorId, letterOf, letterStarts } from "./letterGroups";
+import { letterAnchorId, letterOf, letterStarts, withoutLeadingArticle } from "./letterGroups";
 
 describe("letterGroups", () => {
   it("files titles by first letter, with digits and symbols under #", () => {
@@ -17,5 +17,12 @@ describe("letterGroups", () => {
   it("makes anchor ids safe for #", () => {
     expect(letterAnchorId("#")).toBe("letter-num");
     expect(letterAnchorId("Q")).toBe("letter-Q");
+  });
+
+  it("skips leading articles the way Navidrome sorts names", () => {
+    expect(withoutLeadingArticle("The Black Parade")).toBe("Black Parade");
+    expect(withoutLeadingArticle("A Perfect Circle")).toBe("Perfect Circle");
+    expect(withoutLeadingArticle("Thirty Seconds To Mars")).toBe("Thirty Seconds To Mars");
+    expect(withoutLeadingArticle("The")).toBe("The");
   });
 });

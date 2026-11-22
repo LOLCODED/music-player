@@ -1647,8 +1647,8 @@ button.saved-server-info:disabled { cursor: default; }
   scroll-margin-top: 8px;
 }
 .letter-divider-grid { grid-column: 1 / -1; }
-.songs-page { position: relative; }
-.songs-page:has(.letter-rail) .page-scroll { padding-right: 22px; }
+.lettered-page { position: relative; }
+.lettered-page:has(.letter-rail) .page-scroll { padding-right: 22px; }
 .letter-rail {
   position: absolute;
   right: 2px;
