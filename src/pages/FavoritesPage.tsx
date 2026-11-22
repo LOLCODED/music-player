@@ -6,6 +6,7 @@ import { useMusicPlayer } from "../contexts/MusicPlayerContext";
 import { useFavorites, FavoritesSection } from "../hooks/useFavorites";
 import { useViewMode } from "../hooks/useViewMode";
 import { useToast } from "../hooks/useToast";
+import { useAddToPlaylist } from "../hooks/useAddToPlaylist";
 import { useShufflePlay } from "../hooks/useShufflePlay";
 import { formatTrackDuration } from "../utils/duration";
 import { toErrorMessage } from "../utils/errors";
@@ -15,6 +16,7 @@ import MediaCard from "../components/MediaCard";
 import MediaTable, { MediaTableHeader } from "../components/MediaTable";
 import MediaTableRow from "../components/MediaTableRow";
 import StarActionButton from "../components/StarActionButton";
+import AddToPlaylistButton from "../components/AddToPlaylistButton";
 import Toast from "../components/Toast";
 
 const SECTION_OPTIONS = [
@@ -46,6 +48,7 @@ interface FavoriteItem {
   onOpen: () => void;
   onPlay: () => void;
   onUnstar: () => void;
+  onAddToPlaylist?: () => void;
 }
 
 const FavoritesPage: React.FC = () => {
@@ -58,6 +61,7 @@ const FavoritesPage: React.FC = () => {
   const [viewMode, setViewMode] = useViewMode("viewMode:favorites");
   const { toast, showToast } = useToast();
   const shufflePlay = useShufflePlay(showToast);
+  const { openAddToPlaylist, addToPlaylistDialog } = useAddToPlaylist(showToast);
 
   const {
     songs, albums, loading, error,
@@ -96,6 +100,7 @@ const FavoritesPage: React.FC = () => {
           onOpen: () => playSong(song, undefined, songs),
           onPlay: () => playSong(song, undefined, songs),
           onUnstar: () => handleUnstar(() => unstarSong(song.id)),
+          onAddToPlaylist: () => openAddToPlaylist(song),
         }))
       : albums.map((album) => ({
           id: album.id,
@@ -150,13 +155,18 @@ const FavoritesPage: React.FC = () => {
                 onClick={item.onOpen}
                 onPlay={item.onPlay}
                 trailingAction={
-                  <StarActionButton
-                    starred
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      item.onUnstar();
-                    }}
-                  />
+                  <>
+                    {item.onAddToPlaylist && (
+                      <AddToPlaylistButton className="table-delete-btn" onClick={item.onAddToPlaylist} />
+                    )}
+                    <StarActionButton
+                      starred
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        item.onUnstar();
+                      }}
+                    />
+                  </>
                 }
               />
             ))}
@@ -181,6 +191,7 @@ const FavoritesPage: React.FC = () => {
         )}
       </div>
 
+      {addToPlaylistDialog}
       <Toast message={toast} />
       <Toast message={error} className="toast-low" />
     </div>

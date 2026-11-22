@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from "react";
-import { ChevronDown, Disc3, ListMusic, X } from "lucide-react";
+import { ChevronDown, Disc3, ListMusic, ListPlus, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PlayerVariantProps } from "../../types/player";
 import PlayerTransport from "./PlayerTransport";
@@ -44,9 +44,10 @@ interface FooterProps {
   upNext: number;
   onToggleQueue: () => void;
   onAlbum?: () => void;
+  onAddToPlaylist?: () => void;
 }
 
-const NowPlayingFooter: React.FC<FooterProps> = ({ showQueue, upNext, onToggleQueue, onAlbum }) => (
+const NowPlayingFooter: React.FC<FooterProps> = ({ showQueue, upNext, onToggleQueue, onAlbum, onAddToPlaylist }) => (
   <div className="player-fullscreen-footer">
     <button className={showQueue ? "is-selected" : undefined} onClick={onToggleQueue} aria-pressed={showQueue}>
       <ListMusic size={18} aria-hidden="true" /> {showQueue ? "Artwork" : `Up next · ${upNext}`}
@@ -54,6 +55,11 @@ const NowPlayingFooter: React.FC<FooterProps> = ({ showQueue, upNext, onToggleQu
     <button onClick={onAlbum} disabled={!onAlbum}>
       <Disc3 size={18} aria-hidden="true" /> Go to album
     </button>
+    {onAddToPlaylist && (
+      <button onClick={onAddToPlaylist} aria-label="Add to playlist">
+        <ListPlus size={18} aria-hidden="true" /> Add to list
+      </button>
+    )}
   </div>
 );
 
@@ -132,6 +138,7 @@ const PlayerFullscreen: React.FC<PlayerFullscreenProps> = (props) => {
         upNext={upNext}
         onToggleQueue={() => setShowQueue((v) => !v)}
         onAlbum={albumPath ? () => goTo(albumPath) : undefined}
+        onAddToPlaylist={props.onAddToPlaylist}
       />
     </div>
   );

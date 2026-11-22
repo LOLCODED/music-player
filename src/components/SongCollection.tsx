@@ -6,6 +6,7 @@ import MediaCard from "./MediaCard";
 import MediaTable, { MediaTableHeader } from "./MediaTable";
 import MediaTableRow from "./MediaTableRow";
 import StarActionButton from "./StarActionButton";
+import AddToPlaylistButton from "./AddToPlaylistButton";
 
 const TABLE_HEADERS: MediaTableHeader[] = [
   { label: "Title" },
@@ -26,6 +27,7 @@ export interface SongCollectionProps {
   isPlaying: boolean;
   onPlay: (song: SubsonicSong) => void;
   getCoverArtUrl: (coverArt?: string) => string;
+  onAddToPlaylist: (song: SubsonicSong) => void;
 }
 
 function songRow(props: SongCollectionProps, song: SubsonicSong, index: number) {
@@ -43,7 +45,10 @@ function songRow(props: SongCollectionProps, song: SubsonicSong, index: number) 
       onClick={() => props.onPlay(song)}
       onPlay={() => props.onPlay(song)}
       trailingAction={
-        <StarActionButton starred={starred} onClick={(e) => props.toggleStar(song.id, "song", starred, e)} />
+        <>
+          <AddToPlaylistButton className="table-delete-btn" onClick={() => props.onAddToPlaylist(song)} />
+          <StarActionButton starred={starred} onClick={(e) => props.toggleStar(song.id, "song", starred, e)} />
+        </>
       }
     />
   );

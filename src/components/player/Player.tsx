@@ -29,6 +29,7 @@ interface PlayerProps {
   currentQueueIndex?: number;
   onPlayQueueSong?: (index: number) => void;
   sourcePath?: string | null;
+  onAddToPlaylist?: () => void;
 }
 
 const Player: React.FC<PlayerProps> = ({
@@ -48,6 +49,7 @@ const Player: React.FC<PlayerProps> = ({
   currentQueueIndex,
   onPlayQueueSong,
   sourcePath,
+  onAddToPlaylist,
 }) => {
   const { playerPosition } = useSettings();
   const navigate = useNavigate();
@@ -106,6 +108,7 @@ const Player: React.FC<PlayerProps> = ({
       onPlayQueueSong,
       formatTime: audioState.formatTime,
       handleArtClick,
+      onAddToPlaylist,
     };
   }, [
     currentSong,
@@ -123,6 +126,7 @@ const Player: React.FC<PlayerProps> = ({
     onToggleRepeat,
     onPlayQueueSong,
     handleArtClick,
+    onAddToPlaylist,
     audioState.isLoading,
     audioState.duration,
     audioState.currentTime,

@@ -1,21 +1,19 @@
-import React, { useState } from "react";
-import { Play, Plus, Repeat, Repeat1, Shuffle, Star } from "lucide-react";
+import React from "react";
+import { Play, Repeat, Repeat1, Shuffle, Star } from "lucide-react";
 import { useParams } from "react-router-dom";
-import { SubsonicPlaylist, SubsonicSong } from "../types/subsonic";
 import { useAuth } from "../contexts/AuthContext";
 import { useMusicPlayer } from "../contexts/MusicPlayerContext";
 import { useAlbumDetails } from "../hooks/useAlbumDetails";
 import { useStarToggle } from "../hooks/useStarToggle";
 import { useToast } from "../hooks/useToast";
+import { useAddToPlaylist } from "../hooks/useAddToPlaylist";
 import { formatTotalDuration } from "../utils/duration";
-import { toErrorMessage } from "../utils/errors";
 import CenteredSpinner from "../components/CenteredSpinner";
 import DetailHeader from "../components/DetailHeader";
 import DetailHero from "../components/DetailHero";
 import TrackListHeader from "../components/TrackListHeader";
 import TrackRow from "../components/TrackRow";
-import Modal from "../components/Modal";
-import CreatePlaylistDialog from "../components/CreatePlaylistDialog";
+import AddToPlaylistButton from "../components/AddToPlaylistButton";
 import Toast from "../components/Toast";
 
 const AlbumDetailsPage: React.FC = () => {
@@ -27,35 +25,9 @@ const AlbumDetailsPage: React.FC = () => {
   } = useMusicPlayer();
   const { toast, showToast } = useToast();
 
-  const [selectedSong, setSelectedSong] = useState<SubsonicSong | null>(null);
-  const [showPlaylistSelector, setShowPlaylistSelector] = useState(false);
-  const [showCreatePlaylist, setShowCreatePlaylist] = useState(false);
-
-  const { album, songs, loading, playlists, getCoverArtUrl, addToPlaylist, createPlaylist } =
-    useAlbumDetails(id, subsonicService, showToast);
+  const { album, songs, loading, getCoverArtUrl } = useAlbumDetails(id, subsonicService, showToast);
+  const { openAddToPlaylist, addToPlaylistDialog } = useAddToPlaylist(showToast);
   const { isStarred, toggleStar } = useStarToggle(subsonicService, showToast);
-
-  const handlePlaylistSelect = async (playlist: SubsonicPlaylist) => {
-    if (!selectedSong) return;
-    try {
-      await addToPlaylist(playlist.id, selectedSong.id);
-      setShowPlaylistSelector(false);
-      showToast(`Added "${selectedSong.title}" to "${playlist.name}"`);
-    } catch (err) {
-      showToast(`Failed to add to playlist: ${toErrorMessage(err)}`);
-    }
-  };
-
-  const handleCreatePlaylist = async (name: string) => {
-    if (!selectedSong) return;
-    try {
-      await createPlaylist(name, selectedSong.id);
-      setShowCreatePlaylist(false);
-      showToast(`Created playlist "${name}" with "${selectedSong.title}"`);
-    } catch (err) {
-      showToast(`Failed to create playlist: ${toErrorMessage(err)}`);
-    }
-  };
 
   const handleShuffleClick = () => {
     if (!album) return;
@@ -145,17 +117,10 @@ const AlbumDetailsPage: React.FC = () => {
                     onClick={() => album && playSong(song, album, songs)}
                     onToggleStar={(e) => toggleStar(song.id, "song", starred, e)}
                     trailingAction={
-                      <button
-                        className="btn-icon track-row-action"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedSong(song);
-                          setShowPlaylistSelector(true);
-                        }}
-                        aria-label="Add to playlist"
-                      >
-                        <Plus size={14} />
-                      </button>
+                      <AddToPlaylistButton
+                        className="track-row-action"
+                        onClick={() => openAddToPlaylist(song)}
+                      />
                     }
                   />
                 );
@@ -165,39 +130,7 @@ const AlbumDetailsPage: React.FC = () => {
         )}
       </div>
 
-      {showPlaylistSelector && (
-        <Modal
-          title="Add to Playlist"
-          onClose={() => setShowPlaylistSelector(false)}
-          showCloseButton
-        >
-          <button
-            className="btn modal-list-btn"
-            onClick={() => {
-              setShowPlaylistSelector(false);
-              setShowCreatePlaylist(true);
-            }}
-          >
-            <Plus size={14} /> Create New Playlist
-          </button>
-          {playlists.map((playlist) => (
-            <button
-              key={playlist.id}
-              className="btn modal-list-btn"
-              onClick={() => handlePlaylistSelect(playlist)}
-            >
-              {playlist.name}
-            </button>
-          ))}
-        </Modal>
-      )}
-
-      {showCreatePlaylist && (
-        <CreatePlaylistDialog
-          onSubmit={handleCreatePlaylist}
-          onClose={() => setShowCreatePlaylist(false)}
-        />
-      )}
+      {addToPlaylistDialog}
 
       <Toast message={toast} />
     </div>

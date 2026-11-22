@@ -8,6 +8,7 @@ import { useScrollRestoration } from "../hooks/usePageCache";
 import { useRenderWindow } from "../hooks/useRenderWindow";
 import { useStarToggle } from "../hooks/useStarToggle";
 import { useToast } from "../hooks/useToast";
+import { useAddToPlaylist } from "../hooks/useAddToPlaylist";
 import { letterStarts } from "../utils/letterGroups";
 import { useLetterJump } from "../hooks/useLetterJump";
 import { SubsonicSong } from "../types/subsonic";
@@ -46,6 +47,7 @@ const SongsPage: React.FC = () => {
   const [viewMode, setViewMode] = useViewMode("viewMode:songs", isDesktop ? "grid" : "table");
   const { toast, showToast } = useToast();
   const { isStarred, toggleStar } = useStarToggle(subsonicService, showToast);
+  const { openAddToPlaylist, addToPlaylistDialog } = useAddToPlaylist(showToast);
   const {
     songs, loading, searchLoading, error, hasMore,
     searchText, sortType, setSearchText, setSortType,
@@ -101,6 +103,7 @@ const SongsPage: React.FC = () => {
               isPlaying={isPlaying}
               onPlay={(song) => playSong(song, undefined, songs)}
               getCoverArtUrl={getCoverArtUrl}
+              onAddToPlaylist={openAddToPlaylist}
             />
             <ScrollSentinel
               onVisible={hasHidden ? showMore : loadMore}
@@ -112,6 +115,7 @@ const SongsPage: React.FC = () => {
         )}
       </div>
       {starts && <LetterRail available={new Set(starts.keys())} onJump={jumpToLetter} />}
+      {addToPlaylistDialog}
       <Toast message={toast} />
       <Toast message={error} className="toast-low" />
     </div>

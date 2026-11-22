@@ -46,4 +46,5 @@ export interface PlayerVariantProps {
   onPlayQueueSong?: (index: number) => void;
   formatTime: (seconds: number) => string;
   handleArtClick: () => void;
+  onAddToPlaylist?: () => void;
 }
