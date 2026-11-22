@@ -373,6 +373,7 @@ select option { background: var(--bg-surface); }
   background: var(--bg);
   display: flex;
   flex-direction: column;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   animation: fadeIn 0.2s ease;
 }
 .player-fullscreen-header {
@@ -851,7 +852,7 @@ body:not(.light) .liner-page {
 .login-advanced-fields .login-field label { color: var(--liner-muted); }
 .login-advanced-fields input { background: color-mix(in srgb, var(--liner-paper) 85%, var(--liner-ink)); border-color: var(--liner-rule); color: var(--liner-ink); }
 
-@media (min-width: 900px) {
+@media (min-width: 900px) and (min-height: 500px) {
   .liner-page { flex-direction: row; overflow: hidden; height: 100%; }
   .liner-hero {
     position: relative;
@@ -1050,8 +1051,8 @@ body:not(.light) .liner-page {
   gap: 8px;
 }
 
-/* Desktop layout at ≥768px */
-@media (min-width: 768px) {
+/* Desktop layout: ≥768px wide and tall enough not to be a landscape phone */
+@media (min-width: 768px) and (min-height: 500px) {
   .app-shell {
     padding-bottom: env(safe-area-inset-bottom);
     display: grid;
@@ -1211,13 +1212,13 @@ body:not(.light) .liner-page {
   overflow: hidden;
   position: relative;
 }
-@media (min-width: 768px) {
+@media (min-width: 768px) and (min-height: 500px) {
   .player-floater { display: block; }
 }
-.player-floater-tl { top: 16px; left: 216px; }
-.player-floater-tr { top: 16px; right: 16px; }
-.player-floater-bl { bottom: 16px; left: 216px; }
-.player-floater-br { bottom: 16px; right: 16px; }
+.player-floater-tl { top: calc(16px + env(safe-area-inset-top)); left: calc(216px + env(safe-area-inset-left)); }
+.player-floater-tr { top: calc(16px + env(safe-area-inset-top)); right: calc(16px + env(safe-area-inset-right)); }
+.player-floater-bl { bottom: calc(16px + env(safe-area-inset-bottom)); left: calc(216px + env(safe-area-inset-left)); }
+.player-floater-br { bottom: calc(16px + env(safe-area-inset-bottom)); right: calc(16px + env(safe-area-inset-right)); }
 .player-floater-body {
   display: flex;
   align-items: center;
@@ -1334,7 +1335,7 @@ body:not(.light) .liner-page {
 }
 
 /* Mobile player position */
-@media (max-width: 767px) {
+@media (max-width: 767px), (max-height: 499px) {
   .app-shell[data-mobile-player-pos="top"] .player-area {
     order: -1;
   }

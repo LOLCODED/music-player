@@ -1,5 +1,5 @@
 /* display: contents flattens the centre column so info + progress can share one grid-placed LCD panel. */
-@media (min-width: 768px) {
+@media (min-width: 768px) and (min-height: 500px) {
   body:is([data-skin="itunes"], [data-skin="y2k"]) .player-desktop {
     display: grid;
     grid-template-columns: auto auto minmax(0, 1fr) minmax(240px, 520px) minmax(0, 1fr);
