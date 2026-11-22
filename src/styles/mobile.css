@@ -107,3 +107,46 @@
 @media (max-height: 499px) {
   .mobile-dock .player-area:empty + .tab-btn-bar { flex: 1; }
 }
+
+/* Touch screens: every control gets at least a 44pt target. Small round buttons keep
+   their look by painting only the content box inside a transparent 44pt hit area. */
+@media (pointer: coarse) {
+  .btn-icon { min-width: 44px; min-height: 44px; }
+  .btn { min-height: 44px; }
+  .settings-pill { min-height: 44px; }
+  .login-advanced-toggle { min-height: 44px; }
+  .track-row-action { width: 44px; height: 44px; }
+  .sidebar-nav-link { min-height: 44px; }
+  .player-play-btn { min-width: 44px; min-height: 44px; }
+  .album-card-play,
+  .album-card-star {
+    width: 44px;
+    height: 44px;
+    padding: 7px;
+    background-clip: content-box;
+    top: 2px;
+  }
+  .album-card-play { right: 2px; }
+  .album-card-star { left: 2px; }
+  .album-card-delete { bottom: 52px; }
+  .table-play-btn {
+    width: 44px;
+    height: 44px;
+    padding: 12px;
+    background-clip: content-box;
+    left: -12px;
+  }
+}
+
+/* Touch screens can't hover: show what hover would reveal. */
+@media (hover: none) {
+  .table-play-btn { opacity: 1; }
+  .player-desktop .player-close-tooltip,
+  .player-floater .player-close-tooltip {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+    min-height: 44px;
+    top: -22px;
+  }
+}

@@ -202,3 +202,9 @@ body[data-skin="futurism"] .player-floater-inner {
   body[data-skin="futurism"] .mobile-dock .tab-btn-bar { background: transparent; box-shadow: none; }
   body[data-skin="futurism"] .mobile-dock .player-area:not(:empty) + .tab-btn-bar { border-top: 1px solid rgba(0, 229, 255, 0.25); }
 }
+
+/* The hexagon clips its own hit area, so on touch it fills the whole 44pt target. */
+@media (pointer: coarse) {
+  body[data-skin="futurism"] .album-card-play,
+  body[data-skin="futurism"] .table-play-btn { padding: 0; background-clip: border-box; }
+}
