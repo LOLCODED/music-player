@@ -4,6 +4,7 @@ import { SubsonicAlbum } from "../types/subsonic";
 import { useAuth } from "../contexts/AuthContext";
 import { useAlbums, AlbumSortType } from "../hooks/useAlbums";
 import { useViewMode } from "../hooks/useViewMode";
+import { useRenderWindow } from "../hooks/useRenderWindow";
 import { useScrollRestoration } from "../hooks/usePageCache";
 import { useStarToggle } from "../hooks/useStarToggle";
 import { useToast } from "../hooks/useToast";
@@ -17,6 +18,8 @@ import MediaTable, { MediaTableHeader } from "../components/MediaTable";
 import MediaTableRow from "../components/MediaTableRow";
 import StarActionButton from "../components/StarActionButton";
 import Toast from "../components/Toast";
+
+const RENDER_PAGE_SIZE = 100;
 
 const SORT_OPTIONS = [
   { value: "alphabeticalByName", label: "Name A-Z" },
@@ -59,6 +62,9 @@ const AlbumsPage: React.FC = () => {
   const openAlbum = (album: SubsonicAlbum) => navigate(`/album/${album.id}`);
   const canLoadMore = hasMore && !searchText.trim();
   const showSpinner = (loading || searchLoading) && filteredAlbums.length === 0;
+  const { visible, hasHidden, showMore } = useRenderWindow(
+    subsonicService, "albums", filteredAlbums, RENDER_PAGE_SIZE
+  );
   const scrollRef = useScrollRestoration<HTMLDivElement>(
     subsonicService, "albums", !showSpinner && filteredAlbums.length > 0
   );
@@ -87,7 +93,7 @@ const AlbumsPage: React.FC = () => {
           <>
             {viewMode === "grid" ? (
               <div className="album-grid">
-                {filteredAlbums.map((album, i) => {
+                {visible.map((album, i) => {
                   const starred = isStarred(album.id, album.starred);
                   return (
                     <MediaCard
@@ -106,7 +112,7 @@ const AlbumsPage: React.FC = () => {
               </div>
             ) : (
               <MediaTable headers={TABLE_HEADERS}>
-                {filteredAlbums.map((album, i) => {
+                {visible.map((album, i) => {
                   const starred = isStarred(album.id, album.starred);
                   return (
                     <MediaTableRow
@@ -129,10 +135,10 @@ const AlbumsPage: React.FC = () => {
               </MediaTable>
             )}
             <ScrollSentinel
-              onVisible={loadMore}
-              hasMore={canLoadMore}
+              onVisible={hasHidden ? showMore : loadMore}
+              hasMore={hasHidden || canLoadMore}
               loading={loading}
-              itemCount={filteredAlbums.length}
+              itemCount={visible.length}
             />
           </>
         )}

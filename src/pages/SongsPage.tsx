@@ -1,12 +1,13 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useMusicPlayer } from "../contexts/MusicPlayerContext";
 import { useSongs, SongSortType } from "../hooks/useSongs";
 import { useViewMode } from "../hooks/useViewMode";
 import { useScrollRestoration } from "../hooks/usePageCache";
+import { useRenderWindow } from "../hooks/useRenderWindow";
 import { useStarToggle } from "../hooks/useStarToggle";
 import { useToast } from "../hooks/useToast";
-import { letterStarts } from "../utils/letterGroups";
+import { letterAnchorId, letterStarts } from "../utils/letterGroups";
 import ScrollSentinel from "../components/ScrollSentinel";
 import ListPageHeader from "../components/ListPageHeader";
 import CenteredSpinner from "../components/CenteredSpinner";
@@ -26,6 +27,7 @@ const SORT_OPTIONS = [
 ];
 
 const TITLE_SORTS: SongSortType[] = ["titleAsc", "titleDesc"];
+const RENDER_PAGE_SIZE = 100;
 
 const SongsPage: React.FC = () => {
   const { subsonicService } = useAuth();
@@ -49,6 +51,25 @@ const SongsPage: React.FC = () => {
     [songs, sortType, searching]
   );
   const meta = !searching && !hasMore && songs.length > 0 ? `${songs.length.toLocaleString()} tracks` : undefined;
+  const { visible, hasHidden, showMore, ensureVisible } = useRenderWindow(
+    subsonicService, "songs", songs, RENDER_PAGE_SIZE
+  );
+  const [jumpTo, setJumpTo] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!jumpTo) return;
+    const anchor = document.getElementById(letterAnchorId(jumpTo));
+    if (!anchor) return;
+    anchor.scrollIntoView({ block: "start" });
+    setJumpTo(null);
+  }, [jumpTo, visible.length]);
+
+  const jumpToLetter = (letter: string) => {
+    const index = starts?.get(letter);
+    if (index === undefined) return;
+    ensureVisible(index);
+    setJumpTo(letter);
+  };
 
   return (
     <div className="page songs-page">
@@ -73,7 +94,7 @@ const SongsPage: React.FC = () => {
         ) : (
           <>
             <SongCollection
-              songs={songs}
+              songs={visible}
               viewMode={viewMode}
               letterStarts={starts}
               isStarred={isStarred}
@@ -83,11 +104,16 @@ const SongsPage: React.FC = () => {
               onPlay={(song) => playSong(song, undefined, songs)}
               getCoverArtUrl={getCoverArtUrl}
             />
-            <ScrollSentinel onVisible={loadMore} hasMore={hasMore && !searching} loading={loading} itemCount={songs.length} />
+            <ScrollSentinel
+              onVisible={hasHidden ? showMore : loadMore}
+              hasMore={hasHidden || (hasMore && !searching)}
+              loading={loading}
+              itemCount={visible.length}
+            />
           </>
         )}
       </div>
-      {starts && <LetterRail available={new Set(starts.keys())} />}
+      {starts && <LetterRail available={new Set(starts.keys())} onJump={jumpToLetter} />}
       <Toast message={toast} />
       <Toast message={error} className="toast-low" />
     </div>
