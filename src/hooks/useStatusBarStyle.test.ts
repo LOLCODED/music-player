@@ -13,4 +13,9 @@ describe("statusBarStyle", () => {
     expect(statusBarStyle("y2k", false)).toBe(Style.Dark);
     expect(statusBarStyle("futurism", false)).toBe(Style.Dark);
   });
+
+  it("follows the theme on the login sleeve whatever the skin", () => {
+    expect(statusBarStyle("itunes", true, true)).toBe(Style.Dark);
+    expect(statusBarStyle("y2k", false, true)).toBe(Style.Light);
+  });
 });

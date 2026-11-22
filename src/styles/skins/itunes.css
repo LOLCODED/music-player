@@ -317,3 +317,4 @@ body[data-skin="itunes"] .player-floater .progress-bar { margin: 0 10px 10px; }
   body[data-skin="itunes"] .action-sheet-item { border-bottom: 1px solid #d0d0d0; }
   body[data-skin="itunes"] .action-sheet-done { background: linear-gradient(#ffffff, #c4c4c4); color: #1e1e1e; border: 1px solid #777; border-radius: 8px; }
 }
+body[data-skin="itunes"] { --status-band: #ededed; }

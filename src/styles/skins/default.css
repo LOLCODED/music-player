@@ -263,6 +263,8 @@ body[data-skin="default"] .detail-page .page-scroll > div:not(.detail-hero):not(
   }
   body[data-skin="default"] .mobile-dock .progress-fill { background: var(--accent); }
   body[data-skin="default"] .mobile-dock .player-fullscreen { background: var(--dock-bg); }
+  body[data-skin="default"] .detail-hero { align-items: stretch; padding: 20px 20px 22px; }
+  body[data-skin="default"] .detail-hero-title { font-size: 34px; }
   body[data-skin="default"] .songs-page .content-table-name { width: auto; }
   body[data-skin="default"] .tab-btn svg { display: none; }
   body[data-skin="default"] .tab-btn-num { display: block; font-size: 10px; color: var(--fg-dim); }

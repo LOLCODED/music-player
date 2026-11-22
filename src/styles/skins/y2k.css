@@ -398,3 +398,4 @@ body[data-skin="y2k"] .player-floater .progress-bar { margin: 0 20px 14px; }
   body[data-skin="y2k"] .page-title-row { border-bottom: 2px solid var(--y2k-lcd-text); box-shadow: 0 2px 6px -2px rgba(125, 255, 60, 0.5); }
   body[data-skin="y2k"] .action-sheet-done { background: var(--y2k-chrome); color: #fff; border: 1px solid #000; border-radius: 22px; }
 }
+body[data-skin="y2k"] { --status-band: #5c5f63; }

@@ -11,8 +11,8 @@ import DeviceEffects from "./components/DeviceEffects";
 const App: React.FC = () => {
   return (
     <SettingsProvider>
-      <DeviceEffects />
       <AuthProvider>
+        <DeviceEffects />
         <MusicPlayerProvider>
           <BrowserRouter>
             <Routes>

@@ -489,3 +489,48 @@ body[data-motion="off"] .page-layer { animation: none !important; }
   body[data-keyboard="open"] .liner-record { width: 40px; height: 40px; }
   body[data-keyboard="open"] .liner-sheet { gap: 10px; padding-top: 10px; }
 }
+
+/* The strip behind the status bar takes the colour of whatever sits under it: the header's
+   top edge in skins with a header bar, the sleeve on the login page. */
+#root::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  height: env(safe-area-inset-top);
+  background: var(--status-band, var(--bg));
+  z-index: 30;
+  pointer-events: none;
+}
+:root body:has(.liner-page) { --status-band: #101010; }
+:root body.light:has(.liner-page) { --status-band: #e9e4d8; }
+
+/* The login sleeve looks the same in every skin: skins restyle inputs and fonts, so reset them here. */
+.liner-page { font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", monospace; letter-spacing: normal; }
+:root body .liner-page .liner-row input,
+:root body .liner-page .liner-row input:focus {
+  height: 44px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  text-shadow: none;
+  color: var(--liner-ink);
+  font-family: inherit;
+}
+:root body .liner-page .liner-row input::placeholder { color: var(--liner-muted); text-shadow: none; }
+:root body .liner-page .login-advanced-fields input {
+  border-radius: 2px;
+  box-shadow: none;
+  text-shadow: none;
+  font-family: inherit;
+}
+
+/* Album and playlist pages on phones: a large centred cover above the title. */
+@media (max-width: 767px) and (min-height: 500px) {
+  .detail-hero { flex-direction: column; align-items: stretch; gap: 16px; padding: 20px 20px 18px; }
+  .detail-hero-art { width: min(72vw, 320px); height: auto; aspect-ratio: 1; align-self: center; }
+  .detail-hero-body { min-width: 0; }
+  .detail-hero-title { font-size: 24px; }
+  .detail-hero-actions .btn-primary { flex: 1; justify-content: center; }
+}
