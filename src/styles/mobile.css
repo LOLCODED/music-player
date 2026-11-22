@@ -481,3 +481,11 @@ body[data-motion="off"] .player-fullscreen { animation: none; transition: none; 
   .page-layer-enter-pop::after { animation: page-dim-out 0.3s ease forwards; }
 }
 body[data-motion="off"] .page-layer { animation: none !important; }
+
+/* Login while typing: the sleeve's name shrinks so the fields and Connect stay above the keyboard. */
+@media (max-width: 767px), (max-height: 499px) {
+  body[data-keyboard="open"] .liner-hero { margin-top: 12px; padding-bottom: 8px; }
+  body[data-keyboard="open"] .liner-name { font-size: 30px; }
+  body[data-keyboard="open"] .liner-record { width: 40px; height: 40px; }
+  body[data-keyboard="open"] .liner-sheet { gap: 10px; padding-top: 10px; }
+}
