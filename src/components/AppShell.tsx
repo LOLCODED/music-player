@@ -12,7 +12,8 @@ import Sidebar from "./Sidebar";
 import TabBar from "./TabBar";
 import GlobalPlayer from "./GlobalPlayer";
 import { useSettings } from "../contexts/SettingsContext";
-import { useEdgeSwipeNavigation } from "../hooks/useEdgeSwipeNavigation";
+import { useHistoryEntries } from "../hooks/useHistoryEntries";
+import { useInteractiveEdgeSwipe } from "../hooks/useInteractiveEdgeSwipe";
 import PageStack from "./PageStack";
 
 function renderRoutes(location: Location) {
@@ -33,7 +34,8 @@ function renderRoutes(location: Location) {
 
 const AppShell: React.FC = () => {
   const { playerPosition, mobilePlayerPosition } = useSettings();
-  useEdgeSwipeNavigation();
+  const neighbor = useHistoryEntries();
+  const gestureLayers = useInteractiveEdgeSwipe(neighbor);
   return (
     <div
       className="app-shell"
@@ -42,7 +44,7 @@ const AppShell: React.FC = () => {
     >
       <Sidebar />
       <div className="app-content">
-        <PageStack renderRoutes={renderRoutes} />
+        <PageStack renderRoutes={renderRoutes} gestureLayers={gestureLayers} />
       </div>
       <div className="mobile-dock">
         <div className="player-area">

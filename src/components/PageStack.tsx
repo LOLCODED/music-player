@@ -8,6 +8,7 @@ import { motionAllowed } from "../utils/motion";
 export interface PageLayer {
   location: Location;
   role: "top" | "under" | "enter-push" | "exit-push" | "enter-pop" | "exit-pop";
+  gesture?: boolean;
 }
 
 interface PageStackProps {
@@ -53,10 +54,11 @@ const PageStack: React.FC<PageStackProps> = ({ renderRoutes, gestureLayers }) =>
 
   return (
     <>
-      {shown.map(({ location, role }) => (
+      {shown.map(({ location, role, gesture }) => (
         <div
           key={location.key}
-          className={`page-layer page-layer-${role}`}
+          data-layer-key={location.key}
+          className={`page-layer page-layer-${role}${gesture ? " page-layer-gesture" : ""}`}
           aria-hidden={role === "top" || role.startsWith("enter") ? undefined : true}
           onAnimationEnd={(e) => {
             if (e.target === e.currentTarget && role.startsWith("enter")) settle();

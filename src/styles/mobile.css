@@ -470,6 +470,9 @@ body[data-motion="off"] .player-fullscreen { animation: none; transition: none; 
     pointer-events: none;
     z-index: 50;
   }
+  .page-layer-under::after { opacity: var(--dim, 0); }
+  .page-layer-under.settling::after { transition: opacity 0.26s ease; }
+  .page-layer-gesture { z-index: 2; box-shadow: -12px 0 32px rgba(0, 0, 0, 0.28); }
   .page-layer-exit-push::after { animation: page-dim-in 0.34s ease forwards; }
   .page-layer-enter-pop::after { animation: page-dim-out 0.3s ease forwards; }
 }
