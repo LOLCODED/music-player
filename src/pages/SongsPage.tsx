@@ -3,6 +3,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useMusicPlayer } from "../contexts/MusicPlayerContext";
 import { useSongs, SongSortType } from "../hooks/useSongs";
 import { useViewMode } from "../hooks/useViewMode";
+import { useIsDesktop } from "../hooks/useIsDesktop";
 import { useScrollRestoration } from "../hooks/usePageCache";
 import { useRenderWindow } from "../hooks/useRenderWindow";
 import { useStarToggle } from "../hooks/useStarToggle";
@@ -41,7 +42,8 @@ const RENDER_PAGE_SIZE = 100;
 const SongsPage: React.FC = () => {
   const { subsonicService } = useAuth();
   const { playSong, isCurrentSong, isPlaying } = useMusicPlayer();
-  const [viewMode, setViewMode] = useViewMode("viewMode:songs");
+  const isDesktop = useIsDesktop();
+  const [viewMode, setViewMode] = useViewMode("viewMode:songs", isDesktop ? "grid" : "table");
   const { toast, showToast } = useToast();
   const { isStarred, toggleStar } = useStarToggle(subsonicService, showToast);
   const {

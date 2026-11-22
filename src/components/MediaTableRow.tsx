@@ -56,7 +56,10 @@ const MediaTableRow = React.memo(
                 <Play size={11} fill="currentColor" />
               )}
             </button>
-            {title}
+            <span className="content-table-title">{title}</span>
+            {cells.length > 0 && (
+              <span className="content-table-name-sub">{cells.filter(Boolean).join(" · ")}</span>
+            )}
           </div>
         </td>
         {cells.map((cell, index) => (

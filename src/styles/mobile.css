@@ -263,3 +263,20 @@
 @media (prefers-reduced-motion: reduce) {
   .modal-box { animation: none; }
 }
+
+/* Phone list view: a two-line row (title, then the other columns) instead of a squeezed table. */
+.content-table-name-sub { display: none; }
+@media (max-width: 767px), (max-height: 499px) {
+  .content-table thead { display: none; }
+  .content-table td.content-table-sub { display: none; }
+  .content-table td { padding-top: 9px; padding-bottom: 9px; }
+  .content-table-row { height: 60px; }
+  .content-table-name { width: auto; }
+  .content-table-name-cell { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+  .content-table-title,
+  .content-table-name-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .content-table-name-sub { display: block; font-size: 12px; font-weight: 400; color: var(--fg-muted); }
+  .content-table-row .table-play-btn { display: none; }
+  .content-table td.content-table-time { width: 1%; max-width: none; padding-right: 4px; font-size: 12px; }
+  .content-table td:last-child { width: 44px; max-width: none; padding: 0; overflow: visible; }
+}
