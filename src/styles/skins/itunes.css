@@ -294,3 +294,17 @@ body[data-skin="itunes"] .player-floater-controls .btn-icon {
 }
 body[data-skin="itunes"] .player-floater-controls { gap: 4px; }
 body[data-skin="itunes"] .player-floater .progress-bar { margin: 0 10px 10px; }
+
+/* Phone dock: one brushed-metal sheet */
+@media (max-width: 767px), (max-height: 499px) {
+  body[data-skin="itunes"] .mobile-dock {
+    --dock-bg: var(--itunes-metal);
+    border-top: 1px solid #8e8e8e;
+    box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.18);
+  }
+  body[data-skin="itunes"] .mobile-dock .player-area,
+  body[data-skin="itunes"] .mobile-dock .player-mini,
+  body[data-skin="itunes"] .mobile-dock .tab-btn-bar { background: transparent; }
+  body[data-skin="itunes"] .mobile-dock .player-area:not(:empty) + .tab-btn-bar { border-top: 1px solid #8e8e8e; }
+  body[data-skin="itunes"] .mobile-dock .player-mini .btn-icon { color: #1e1e1e; }
+}

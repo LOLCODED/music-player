@@ -6,10 +6,12 @@ import { SettingsProvider } from "./contexts/SettingsContext";
 import LoginPage from "./pages/LoginPage";
 import AppShell from "./components/AppShell";
 import ProtectedRoute from "./components/ProtectedRoute";
+import DeviceEffects from "./components/DeviceEffects";
 
 const App: React.FC = () => {
   return (
     <SettingsProvider>
+      <DeviceEffects />
       <AuthProvider>
         <MusicPlayerProvider>
           <BrowserRouter>

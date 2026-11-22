@@ -37,10 +37,12 @@ const AppShell: React.FC = () => {
           <Route path="*" element={<Navigate to="/albums" replace />} />
         </Routes>
       </div>
-      <div className="player-area">
-        <GlobalPlayer />
+      <div className="mobile-dock">
+        <div className="player-area">
+          <GlobalPlayer />
+        </div>
+        <TabBar />
       </div>
-      <TabBar />
     </div>
   );
 };

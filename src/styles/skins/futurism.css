@@ -189,3 +189,16 @@ body[data-skin="futurism"] .player-floater-inner {
   border-radius: 0;
   clip-path: var(--fx-cut);
 }
+
+/* Phone dock: one glass sheet edged in cyan */
+@media (max-width: 767px), (max-height: 499px) {
+  body[data-skin="futurism"] .mobile-dock {
+    --dock-bg: rgba(4, 8, 16, 0.94);
+    border-top: 1px solid rgba(0, 229, 255, 0.4);
+    box-shadow: 0 -8px 30px rgba(0, 229, 255, 0.1);
+  }
+  body[data-skin="futurism"] .mobile-dock .player-area,
+  body[data-skin="futurism"] .mobile-dock .player-mini,
+  body[data-skin="futurism"] .mobile-dock .tab-btn-bar { background: transparent; box-shadow: none; }
+  body[data-skin="futurism"] .mobile-dock .player-area:not(:empty) + .tab-btn-bar { border-top: 1px solid rgba(0, 229, 255, 0.25); }
+}

@@ -1,0 +1,109 @@
+/* Phone layout: portrait phones and landscape phones (too short for the desktop layout). */
+
+.tab-btn-num { display: none; }
+
+@media (min-width: 768px) and (min-height: 500px) {
+  .mobile-dock { display: contents; }
+}
+
+@media (max-width: 767px), (max-height: 499px) {
+  /* The dock: mini player and tabs as one sheet running into the home-indicator area. */
+  .mobile-dock {
+    --dock-radius: 18px;
+    position: relative;
+    z-index: 20;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--dock-bg, var(--bg-surface));
+    color: var(--fg);
+    border-radius: var(--dock-radius) var(--dock-radius) 0 0;
+    box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.18);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .mobile-dock .player-area:empty { display: none; }
+
+  .mobile-dock .player-mini {
+    position: relative;
+    background: transparent;
+    border: 0;
+    padding: 14px 8px 0 12px;
+  }
+  .mobile-dock .player-mini::before {
+    content: "";
+    position: absolute;
+    top: 5px;
+    left: 50%;
+    width: 36px;
+    height: 4px;
+    margin-left: -18px;
+    border-radius: 2px;
+    background: var(--fg-dim);
+    opacity: 0.6;
+  }
+  .mobile-dock .player-mini-row { gap: 8px; margin-bottom: 8px; }
+  .mobile-dock .player-mini-art { width: 44px; height: 44px; }
+  .mobile-dock .player-mini-title { font-size: 13px; }
+  .mobile-dock .player-mini-artist { font-size: 12px; }
+  .mobile-dock .player-mini .btn-icon { width: 44px; height: 44px; color: var(--fg); }
+  .mobile-dock .player-mini .player-play-btn { width: 44px; height: 44px; }
+  .mobile-dock .player-mini .progress-bar { height: 2px; margin: 0 4px 0 0 !important; pointer-events: none; }
+  .mobile-dock .player-mini .progress-handle { display: none; }
+
+  .mobile-dock .tab-btn-bar {
+    background: transparent;
+    border-top: 0;
+    padding-bottom: 0;
+  }
+  .mobile-dock .player-area:not(:empty) + .tab-btn-bar { border-top: 1px dashed var(--border); }
+  .tab-btn {
+    min-height: 52px;
+    padding: 6px 4px;
+    justify-content: center;
+    gap: 2px;
+    font-size: 11px;
+  }
+  .tab-btn:hover { background: transparent; }
+
+  /* Mini player at the top: the player leaves the sheet and the tabs keep it. */
+  .app-shell[data-mobile-player-pos="top"] .mobile-dock { display: contents; }
+  .app-shell[data-mobile-player-pos="top"] .tab-btn-bar {
+    background: var(--dock-bg, var(--bg-surface));
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.18);
+    padding-bottom: env(safe-area-inset-bottom);
+    position: relative;
+    z-index: 20;
+  }
+  .app-shell[data-mobile-player-pos="top"] .player-mini::before { display: none; }
+  .app-shell[data-mobile-player-pos="top"] .player-mini { padding-top: 8px; }
+
+  /* Typing: iOS apps hide the tab bar while the keyboard is up. */
+  body[data-keyboard="open"] .mobile-dock,
+  body[data-keyboard="open"] .app-shell[data-mobile-player-pos="top"] .tab-btn-bar { display: none; }
+
+  .toast { bottom: calc(env(safe-area-inset-bottom) + 150px); }
+  .toast-low { bottom: calc(env(safe-area-inset-bottom) + 120px); }
+}
+
+/* Landscape phone: the dock is one row, mini player beside the tabs. */
+@media (max-height: 499px) {
+  .mobile-dock {
+    --dock-radius: 14px;
+    flex-direction: row;
+    align-items: stretch;
+  }
+  .mobile-dock .player-area { flex: 1; min-width: 0; }
+  .mobile-dock .player-mini { padding: 4px 8px 0 12px; }
+  .mobile-dock .player-mini::before { display: none; }
+  .mobile-dock .player-mini-row { margin-bottom: 2px; }
+  .mobile-dock .player-mini-art { width: 36px; height: 36px; }
+  .mobile-dock .tab-btn-bar { flex: 0 0 auto; }
+  .mobile-dock .player-area:not(:empty) + .tab-btn-bar { border-top: 0; border-left: 1px dashed var(--border); }
+  .mobile-dock .tab-btn { flex-direction: row; gap: 6px; min-width: 92px; min-height: 48px; }
+  .toast { bottom: calc(env(safe-area-inset-bottom) + 72px); }
+  .toast-low { bottom: calc(env(safe-area-inset-bottom) + 64px); }
+}
+@media (max-height: 499px) {
+  .mobile-dock .player-area:empty + .tab-btn-bar { flex: 1; }
+}

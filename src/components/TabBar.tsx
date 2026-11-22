@@ -1,28 +1,31 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { NAV_ITEMS, isNavItemActive } from "./navItems";
+import { trackNumber } from "../utils/trackNumber";
 
-const TAB_ICON_SIZE = 18;
-
-const TAB_LINK_STYLE: React.CSSProperties = { textDecoration: "none" };
+const TAB_ICON_SIZE = 20;
 
 const TabBar: React.FC = () => {
   const location = useLocation();
 
   return (
-    <div className="tab-btn-bar">
-      {NAV_ITEMS.map((item) => (
-        <Link
-          key={item.to}
-          to={item.to}
-          className={`tab-btn ${isNavItemActive(location.pathname, item) ? "active" : ""}`}
-          style={TAB_LINK_STYLE}
-        >
-          <item.Icon size={TAB_ICON_SIZE} />
-          <span>{item.label}</span>
-        </Link>
-      ))}
-    </div>
+    <nav className="tab-btn-bar" aria-label="Library">
+      {NAV_ITEMS.map((item, i) => {
+        const active = isNavItemActive(location.pathname, item);
+        return (
+          <Link
+            key={item.to}
+            to={item.to}
+            className={`tab-btn${active ? " active" : ""}`}
+            aria-current={active ? "page" : undefined}
+          >
+            <item.Icon size={TAB_ICON_SIZE} aria-hidden="true" />
+            <span className="tab-btn-num" aria-hidden="true">{trackNumber(i)}</span>
+            <span className="tab-btn-label">{item.label}</span>
+          </Link>
+        );
+      })}
+    </nav>
   );
 };
 

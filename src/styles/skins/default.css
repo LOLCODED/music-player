@@ -230,3 +230,42 @@ body[data-skin="default"] .detail-page .page-scroll > div:not(.detail-hero):not(
   body[data-skin="default"] .songs-page .content-table-row td:nth-child(3) { display: none; }
   body[data-skin="default"] .songs-page .content-table-name { width: 58%; }
 }
+
+/* Phone dock: the sheet in the opposite palette, tabs numbered like tracks */
+@media (max-width: 767px), (max-height: 499px) {
+  body[data-skin="default"] .app-shell:not([data-mobile-player-pos="top"]) .mobile-dock,
+  body[data-skin="default"] .tab-btn-bar {
+    --dock-bg: #e9e4d8;
+    --bg-surface: #efebe2;
+    --bg-elevated: #ddd6c6;
+    --fg: #141414;
+    --fg-muted: #4f4a43;
+    --fg-dim: #5f5a52;
+    --border: #b8b1a2;
+    --dash: #c4bdae;
+  }
+  body.light[data-skin="default"] .app-shell:not([data-mobile-player-pos="top"]) .mobile-dock,
+  body.light[data-skin="default"] .tab-btn-bar {
+    --dock-bg: #0a0a0a;
+    --bg-surface: #121212;
+    --bg-elevated: #1a1a1a;
+    --fg: #ededed;
+    --fg-muted: #8f8f8f;
+    --fg-dim: #727272;
+    --border: #2a2a2a;
+    --dash: #262626;
+  }
+  body[data-skin="default"] .mobile-dock .player-play-btn,
+  body[data-skin="default"] .mobile-dock .player-play-btn:hover {
+    border-radius: 2px;
+    background: var(--fg);
+    color: var(--dock-bg, var(--bg));
+  }
+  body[data-skin="default"] .mobile-dock .progress-fill { background: var(--accent); }
+  body[data-skin="default"] .tab-btn svg { display: none; }
+  body[data-skin="default"] .tab-btn-num { display: block; font-size: 10px; color: var(--fg-dim); }
+  body[data-skin="default"] .tab-btn { color: var(--fg-muted); font-size: 12px; }
+  body[data-skin="default"] .tab-btn.active { color: var(--fg); font-weight: 800; }
+  body[data-skin="default"] .tab-btn-label { border-bottom: 2px solid transparent; padding-bottom: 1px; }
+  body[data-skin="default"] .tab-btn.active .tab-btn-label { border-bottom-color: var(--accent); }
+}
