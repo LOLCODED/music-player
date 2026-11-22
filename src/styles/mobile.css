@@ -118,8 +118,10 @@
   .login-advanced-toggle { min-height: 44px; }
   .track-row-action { width: 44px; height: 44px; }
   .sidebar-nav-link { min-height: 44px; }
-  .page-header-sort { min-height: 44px; }
-  .player-fullscreen .player-panel-artist { min-height: 44px; margin-bottom: -10px; }
+  .page-header-sort,
+  .page-header-search { min-height: 44px; }
+  .settings-pill { min-width: 44px; }
+  .player-fullscreen .player-panel-artist { min-height: 44px; min-width: 44px; margin-bottom: -10px; }
   .accent-swatches { gap: 2px; }
   .accent-swatch { width: 44px; height: 44px; }
   .accent-swatch span { width: 30px; height: 30px; }
