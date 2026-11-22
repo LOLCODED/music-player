@@ -20,40 +20,6 @@ body.light[data-skin="default"] {
   --dash: #c4bdae;
 }
 
-/* Surfaces that always read as the dark record sleeve, whatever the theme */
-body[data-skin="default"] .detail-hero {
-  --bg: #0a0a0a;
-  --bg-surface: #121212;
-  --bg-elevated: #1a1a1a;
-  --fg: #ededed;
-  --fg-muted: #8f8f8f;
-  --fg-dim: #727272;
-  --border: #2a2a2a;
-}
-
-/* The player strip takes the opposite palette so it stands apart */
-body[data-skin="default"] .player-desktop,
-body[data-skin="default"] .player-mini {
-  --bg: #e9e4d8;
-  --bg-surface: #e9e4d8;
-  --bg-elevated: #ddd6c6;
-  --fg: #141414;
-  --fg-muted: #4f4a43;
-  --fg-dim: #5f5a52;
-  --border: #b8b1a2;
-  background: var(--bg);
-  color: var(--fg);
-}
-body.light[data-skin="default"] .player-desktop,
-body.light[data-skin="default"] .player-mini {
-  --bg: #141414;
-  --bg-surface: #141414;
-  --bg-elevated: #222222;
-  --fg: #e9e4d8;
-  --fg-muted: #a6a197;
-  --fg-dim: #8f8a80;
-  --border: #333333;
-}
 body[data-skin="default"] .player-desktop-art,
 body[data-skin="default"] .player-mini-art { border-radius: 0; }
 body[data-skin="default"] .player-desktop-title,
@@ -208,9 +174,10 @@ body[data-skin="default"] .track-row.header {
   border-bottom: 3px solid var(--fg);
 }
 
-/* Detail hero: the dark sleeve with a heavy title */
+/* Detail hero: the sleeve with a heavy title */
 body[data-skin="default"] .detail-hero {
-  background: var(--bg);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
   color: var(--fg);
   padding: 28px 20px 24px;
   align-items: flex-end;
@@ -234,6 +201,8 @@ body[data-skin="default"] .detail-page .page-scroll > div:not(.detail-hero):not(
   }
   body[data-skin="default"] .detail-page .centered-spinner { grid-column: 1 / -1; }
   body[data-skin="default"] .detail-hero {
+    border-bottom: 0;
+    border-right: 1px solid var(--border);
     position: sticky;
     top: 0;
     min-height: 100%;
