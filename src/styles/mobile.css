@@ -117,6 +117,9 @@
   .login-advanced-toggle { min-height: 44px; }
   .track-row-action { width: 44px; height: 44px; }
   .sidebar-nav-link { min-height: 44px; }
+  .accent-swatches { gap: 2px; }
+  .accent-swatch { width: 44px; height: 44px; }
+  .accent-swatch span { width: 30px; height: 30px; }
   .player-play-btn { min-width: 44px; min-height: 44px; }
   .album-card-play,
   .album-card-star {
@@ -260,9 +263,7 @@
   .modal-actions .btn { flex: 1; justify-content: center; }
   body[data-keyboard="open"] .modal-box { padding-bottom: 18px; }
 }
-@media (prefers-reduced-motion: reduce) {
-  .modal-box { animation: none; }
-}
+body[data-motion="off"] .modal-box { animation: none; }
 
 /* Phone list view: a two-line row (title, then the other columns) instead of a squeezed table. */
 .content-table-name-sub { display: none; }
@@ -426,6 +427,4 @@
   .player-fullscreen .player-panel-title { font-size: 18px; }
   .player-play-btn.sheet { width: 60px; height: 60px; }
 }
-@media (prefers-reduced-motion: reduce) {
-  .player-fullscreen { animation: none; }
-}
+body[data-motion="off"] .player-fullscreen { animation: none; transition: none; }

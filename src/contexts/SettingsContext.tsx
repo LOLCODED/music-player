@@ -10,13 +10,15 @@ import {
   PlayerPosition,
   MobilePlayerPosition,
   Skin,
+  PageAnimations,
+  PAGE_ANIMATIONS,
   PLAYER_POSITIONS,
   MOBILE_PLAYER_POSITIONS,
   SKINS,
   ACCENT_HOVER_MAP,
 } from '../types/settings';
 
-export type { PlayerPosition, MobilePlayerPosition, Skin } from '../types/settings';
+export type { PlayerPosition, MobilePlayerPosition, Skin, PageAnimations } from '../types/settings';
 
 interface SettingsContextType {
   isDarkMode: boolean;
@@ -29,6 +31,8 @@ interface SettingsContextType {
   setMobilePlayerPosition: (pos: MobilePlayerPosition) => void;
   skin: Skin;
   setSkin: (skin: Skin) => void;
+  pageAnimations: PageAnimations;
+  setPageAnimations: (value: PageAnimations) => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -82,6 +86,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const [skin, setSkinState] = useState<Skin>(() =>
     readStoredSetting('skin', SKINS, 'default')
+  );
+
+  const [pageAnimations, setPageAnimationsState] = useState<PageAnimations>(() =>
+    readStoredSetting('pageAnimations', PAGE_ANIMATIONS, 'system')
   );
 
   useEffect(() => {
@@ -139,6 +147,15 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, []);
 
+  const setPageAnimations = useCallback((next: PageAnimations) => {
+    setPageAnimationsState(next);
+    try {
+      localStorage.setItem('pageAnimations', next);
+    } catch {
+      // Ignore storage failures.
+    }
+  }, []);
+
   const value = useMemo(
     () => ({
       isDarkMode,
@@ -151,6 +168,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setMobilePlayerPosition,
       skin,
       setSkin,
+      pageAnimations,
+      setPageAnimations,
     }),
     [
       isDarkMode,
@@ -163,6 +182,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setMobilePlayerPosition,
       skin,
       setSkin,
+      pageAnimations,
+      setPageAnimations,
     ]
   );
 

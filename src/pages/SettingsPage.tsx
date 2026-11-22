@@ -1,6 +1,6 @@
 import React from "react";
 import { useSettings } from "../contexts/SettingsContext";
-import { PlayerPosition } from "../types/settings";
+import { PageAnimations, PlayerPosition } from "../types/settings";
 import { useIsDesktop } from "../hooks/useIsDesktop";
 import { LayoutDiagram } from "../components/LayoutDiagram";
 import { LAYOUT_OPTIONS, FLOATER_CORNERS } from "../components/layoutOptions";
@@ -19,17 +19,131 @@ const ACCENT_COLORS = [
   { label: "Indigo", value: "#6366f1" },
 ];
 
-const MOBILE_POSITIONS = ["bottom", "top"] as const;
+const MOBILE_POSITIONS = [
+  { value: "bottom", label: "Above tabs" },
+  { value: "top", label: "Top" },
+] as const;
 
-const SettingsPage: React.FC = () => {
-  const {
-    isDarkMode, toggleTheme, accentColor, setAccentColor,
-    playerPosition, setPlayerPosition, mobilePlayerPosition, setMobilePlayerPosition, skin,
-  } = useSettings();
-  const isDesktop = useIsDesktop();
+const ANIMATION_OPTIONS: { value: PageAnimations; label: string }[] = [
+  { value: "system", label: "System" },
+  { value: "on", label: "On" },
+  { value: "off", label: "Off" },
+];
 
+interface PillGroupProps<T extends string> {
+  label: string;
+  options: readonly { value: T; label: string }[];
+  selected: T;
+  onSelect: (value: T) => void;
+}
+
+function PillGroup<T extends string>({ label, options, selected, onSelect }: PillGroupProps<T>) {
+  return (
+    <div className="settings-pill-group" role="group" aria-label={label}>
+      {options.map((option) => (
+        <button
+          key={option.value}
+          className={`settings-pill${selected === option.value ? " is-selected" : ""}`}
+          aria-pressed={selected === option.value}
+          onClick={() => onSelect(option.value)}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+const AppearanceSection: React.FC = () => {
+  const { isDarkMode, toggleTheme, accentColor, setAccentColor } = useSettings();
+  return (
+    <>
+      <div className="settings-section-label">Appearance</div>
+      <div className="settings-row">
+        <span>Theme</span>
+        <button className="settings-pill" style={{ minWidth: 100 }} onClick={toggleTheme}>
+          {isDarkMode ? "🌙 Dark" : "☀️ Light"}
+        </button>
+      </div>
+      <div className="settings-section-label">Accent Color</div>
+      <div className="accent-swatches">
+        {ACCENT_COLORS.map((c) => (
+          <button
+            key={c.value}
+            className={`accent-swatch${accentColor === c.value ? " is-selected" : ""}`}
+            title={c.label}
+            aria-label={c.label}
+            aria-pressed={accentColor === c.value}
+            onClick={() => setAccentColor(c.value)}
+            style={{ color: c.value }}
+          >
+            <span />
+          </button>
+        ))}
+      </div>
+    </>
+  );
+};
+
+const MotionSection: React.FC = () => {
+  const { pageAnimations, setPageAnimations } = useSettings();
+  return (
+    <>
+      <div className="settings-section-label">Motion</div>
+      <div className="settings-row">
+        <span>Page animations</span>
+        <PillGroup label="Page animations" options={ANIMATION_OPTIONS} selected={pageAnimations} onSelect={setPageAnimations} />
+      </div>
+      <p className="settings-hint">
+        System follows Reduce Motion in your device settings. Off keeps swipe-back working, but pages change instantly.
+      </p>
+    </>
+  );
+};
+
+const DesktopLayoutSection: React.FC = () => {
+  const { playerPosition, setPlayerPosition } = useSettings();
   const isFloaterSelected = playerPosition.startsWith("floater");
   const selectedFloaterCorner = isFloaterSelected ? playerPosition : "floater-br";
+
+  return (
+    <>
+      <div className="settings-section-label">Desktop Player Layout</div>
+      <p style={{ fontSize: 11, color: "var(--fg-muted)", marginBottom: 12 }}>
+        Choose where the player appears on desktop.
+      </p>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 16 }}>
+        {LAYOUT_OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            className={`settings-option-card${playerPosition === opt.value ? " is-selected" : ""}`}
+            onClick={() => setPlayerPosition(opt.value)}
+          >
+            <LayoutDiagram layout={opt.layout} />
+            <span>{opt.label}</span>
+          </button>
+        ))}
+        <button
+          className={`settings-option-card${isFloaterSelected ? " is-selected" : ""}`}
+          onClick={() => setPlayerPosition(selectedFloaterCorner as PlayerPosition)}
+        >
+          <LayoutDiagram layout="floater" />
+          <span>Floater</span>
+        </button>
+      </div>
+      {isFloaterSelected && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 11, color: "var(--fg-muted)", marginBottom: 8 }}>Corner position</div>
+          <PillGroup label="Corner position" options={FLOATER_CORNERS} selected={playerPosition} onSelect={setPlayerPosition} />
+        </div>
+      )}
+    </>
+  );
+};
+
+const SettingsPage: React.FC = () => {
+  const { mobilePlayerPosition, setMobilePlayerPosition, skin } = useSettings();
+  const isDesktop = useIsDesktop();
 
   return (
     <div className="page">
@@ -38,120 +152,21 @@ const SettingsPage: React.FC = () => {
         <PageTitle title="Settings" phoneOnly />
       </div>
 
-      <div style={{ flex: 1, overflowY: "auto", padding: "0 20px 32px" }}>
+      <div className="settings-body">
         <div className="settings-section-label">Skin</div>
         <SkinPicker />
-
         {skin === "default" ? (
-          <>
-            <div className="settings-section-label">Appearance</div>
-
-            <div className="settings-row">
-              <span>Theme</span>
-              <button
-                className="settings-pill"
-                style={{ minWidth: 100 }}
-                onClick={toggleTheme}
-              >
-                {isDarkMode ? "🌙 Dark" : "☀️ Light"}
-              </button>
-            </div>
-
-            <div className="settings-section-label">Accent Color</div>
-
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, paddingTop: 8, paddingBottom: 16 }}>
-              {ACCENT_COLORS.map(c => (
-                <button
-                  key={c.value}
-                  title={c.label}
-                  aria-label={c.label}
-                  onClick={() => setAccentColor(c.value)}
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: "50%",
-                    background: c.value,
-                    border: accentColor === c.value
-                      ? "3px solid var(--fg)"
-                      : "3px solid transparent",
-                    outline: accentColor === c.value ? `2px solid ${c.value}` : "none",
-                    outlineOffset: 1,
-                    cursor: "pointer",
-                    padding: 0,
-                    transition: "transform 0.1s ease",
-                    transform: accentColor === c.value ? "scale(1.15)" : "scale(1)",
-                  }}
-                />
-              ))}
-            </div>
-          </>
+          <AppearanceSection />
         ) : (
           <p className="settings-hint">This skin uses its own colors. Switch back to Default to change theme or accent.</p>
         )}
-
-        {!isDesktop && (
+        <MotionSection />
+        {isDesktop ? (
+          <DesktopLayoutSection />
+        ) : (
           <>
-            <div className="settings-section-label">Mobile Player Position</div>
-            <div style={{ display: "flex", gap: 8, marginBottom: 16, paddingTop: 8 }}>
-              {MOBILE_POSITIONS.map(pos => (
-                <button
-                  key={pos}
-                  className={`settings-pill${mobilePlayerPosition === pos ? " is-selected" : ""}`}
-                  onClick={() => setMobilePlayerPosition(pos)}
-                >
-                  {pos}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
-
-        {isDesktop && (
-          <>
-            <div className="settings-section-label">Desktop Player Layout</div>
-            <p style={{ fontSize: 11, color: "var(--fg-muted)", marginBottom: 12 }}>
-              Choose where the player appears on desktop.
-            </p>
-
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 16 }}>
-              {LAYOUT_OPTIONS.map(opt => (
-                <button
-                  key={opt.value}
-                  className={`settings-option-card${playerPosition === opt.value ? " is-selected" : ""}`}
-                  onClick={() => setPlayerPosition(opt.value)}
-                >
-                  <LayoutDiagram layout={opt.layout} />
-                  <span>{opt.label}</span>
-                </button>
-              ))}
-
-              <button
-                className={`settings-option-card${isFloaterSelected ? " is-selected" : ""}`}
-                onClick={() => setPlayerPosition(selectedFloaterCorner as PlayerPosition)}
-              >
-                <LayoutDiagram layout="floater" />
-                <span>Floater</span>
-              </button>
-            </div>
-
-            {isFloaterSelected && (
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 11, color: "var(--fg-muted)", marginBottom: 8 }}>
-                  Corner position
-                </div>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {FLOATER_CORNERS.map(corner => (
-                    <button
-                      key={corner.value}
-                      className={`settings-pill${playerPosition === corner.value ? " is-selected" : ""}`}
-                      onClick={() => setPlayerPosition(corner.value)}
-                    >
-                      {corner.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+            <div className="settings-section-label">Mini Player</div>
+            <PillGroup label="Mini player position" options={MOBILE_POSITIONS} selected={mobilePlayerPosition} onSelect={setMobilePlayerPosition} />
           </>
         )}
       </div>
