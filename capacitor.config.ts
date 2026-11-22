@@ -6,7 +6,11 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.lolcoded.cascade',
   appName: 'Cascade',
-  webDir: 'dist'
+  webDir: 'dist',
+  plugins: {
+    // Native HTTP: the app's capacitor:// origin isn't on servers' CORS lists.
+    CapacitorHttp: { enabled: true },
+  },
 };
 
 export default config;

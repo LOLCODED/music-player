@@ -13,6 +13,7 @@ import { shuffleArray } from "../utils/shuffle";
 import { useAuth } from "./AuthContext";
 import { Song, RepeatMode } from "../types/player";
 import { recordSongPlay, recordPlaylistPlay } from "../utils/recentlyPlayed";
+import { useMediaSession } from "../hooks/useMediaSession";
 
 export type { RepeatMode } from "../types/player";
 // Backwards-compat alias
@@ -294,6 +295,8 @@ export const MusicPlayerProvider: React.FC<MusicPlayerProviderProps> = ({
     (songId: string) => currentSong?.id === songId,
     [currentSong]
   );
+
+  useMediaSession(currentSong, isPlaying, { togglePlayPause, skipNext, skipPrevious });
 
   const value = useMemo<MusicPlayerContextType>(
     () => ({
