@@ -18,10 +18,10 @@ interface PlayerFullscreenProps extends PlayerVariantProps {
 }
 
 type ReadoutProps = Pick<PlayerFullscreenProps, "currentSong" | "currentTime" | "duration" | "displayProgress"
-  | "isDragging" | "onProgressPointerDown" | "formatTime"> & { onArtist: () => void; onAlbum: () => void };
+  | "isDragging" | "onProgressPointerDown" | "formatTime"> & { onArtist: () => void };
 
 const NowPlayingReadout: React.FC<ReadoutProps> = ({
-  currentSong, currentTime, duration, displayProgress, isDragging, onProgressPointerDown, formatTime, onArtist, onAlbum,
+  currentSong, currentTime, duration, displayProgress, isDragging, onProgressPointerDown, formatTime, onArtist,
 }) => (
   <div className="player-panel-readout">
     <div>
@@ -29,11 +29,7 @@ const NowPlayingReadout: React.FC<ReadoutProps> = ({
       <button type="button" className="player-panel-artist player-fullscreen-artist" onClick={onArtist}>
         {currentSong.artist}
       </button>
-      {currentSong.albumName && (
-        <button type="button" className="player-fullscreen-album" onClick={onAlbum} disabled={!currentSong.albumId}>
-          {currentSong.albumName}
-        </button>
-      )}
+      {currentSong.albumName && <div className="player-fullscreen-album">{currentSong.albumName}</div>}
     </div>
     <div className="player-progress-section">
       <span className="player-time">{formatTime(currentTime)}</span>
@@ -126,7 +122,6 @@ const PlayerFullscreen: React.FC<PlayerFullscreenProps> = (props) => {
           <NowPlayingReadout
             {...props}
             onArtist={() => goTo(`/albums?artist=${encodeURIComponent(currentSong.artist)}`)}
-            onAlbum={() => albumPath && goTo(albumPath)}
           />
           <PlayerTransport size="sheet" {...props} />
           {!isIOS() && <NowPlayingVolume {...props} />}

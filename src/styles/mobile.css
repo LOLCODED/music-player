@@ -121,6 +121,8 @@
   .login-advanced-toggle { min-height: 44px; }
   .track-row-action { width: 44px; height: 44px; }
   .sidebar-nav-link { min-height: 44px; }
+  .page-header-sort { min-height: 44px; }
+  .player-fullscreen .player-panel-artist { min-height: 44px; margin-bottom: -10px; }
   .accent-swatches { gap: 2px; }
   .accent-swatch { width: 44px; height: 44px; }
   .accent-swatch span { width: 30px; height: 30px; }
@@ -187,7 +189,7 @@
   .page-actions-more { margin: 0 -10px -6px 0; color: var(--fg); }
   .page-header-controls { width: 100%; flex-wrap: wrap; gap: 8px; }
   .page-header-search { flex: 1 0 100%; max-width: none; min-height: 44px; }
-  .page-header-sort { flex: 0 1 auto; min-width: 0; max-width: 60%; min-height: 40px; width: auto; }
+  .page-header-sort { flex: 0 1 auto; min-width: 0; max-width: 60%; width: auto; }
   .page-header-controls .btn-icon:first-of-type { margin-left: auto; }
   .page-header > .btn { margin-left: auto; }
 }
@@ -386,7 +388,7 @@ body[data-motion="off"] .modal-box { animation: none; }
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .player-fullscreen-album { color: var(--fg-muted); font-size: 13px; }
+  .player-fullscreen-album { color: var(--fg-muted); font-size: 13px; cursor: default; }
   .player-fullscreen .progress-bar { height: 5px; }
   .player-fullscreen .progress-bar::before { content: ""; position: absolute; inset: -18px 0; }
   .player-fullscreen .progress-handle { width: 14px; height: 14px; right: -7px; }
