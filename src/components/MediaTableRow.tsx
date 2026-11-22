@@ -3,6 +3,7 @@ import { Pause, Play } from "lucide-react";
 
 interface MediaTableRowProps {
   title: string;
+  index?: number;
   cells: string[];
   time?: string;
   active?: boolean;
@@ -15,6 +16,7 @@ interface MediaTableRowProps {
 const MediaTableRow = React.memo(
   function MediaTableRow({
     title,
+    index,
     cells,
     time,
     active = false,
@@ -39,6 +41,7 @@ const MediaTableRow = React.memo(
       >
         <td className="content-table-name">
           <div className="content-table-name-cell">
+            {index !== undefined && <span className="content-table-num">{index + 1}</span>}
             <button
               className="table-play-btn"
               onClick={(e) => {

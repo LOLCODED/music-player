@@ -77,7 +77,7 @@ const PlaylistDetailsPage: React.FC = () => {
   };
 
   return (
-    <div className="page">
+    <div className="page detail-page">
       <DetailHeader title={playlist?.name || "Playlist"} />
 
       <div className="page-scroll">

@@ -18,6 +18,8 @@ interface ListPageHeaderProps {
   onToggleView: () => void;
   onRefresh: () => void;
   extra?: React.ReactNode;
+  title?: string;
+  meta?: string;
 }
 
 const ListPageHeader: React.FC<ListPageHeaderProps> = ({
@@ -31,8 +33,16 @@ const ListPageHeader: React.FC<ListPageHeaderProps> = ({
   onToggleView,
   onRefresh,
   extra,
+  title,
+  meta,
 }) => (
   <div className="page-header">
+    {title && (
+      <div className="page-title-row">
+        <h1 className="page-title">{title}</h1>
+        {meta && <span className="page-title-meta">{meta}</span>}
+      </div>
+    )}
     <div className="page-header-controls">
       <input
         type="search"

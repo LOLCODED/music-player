@@ -1,11 +1,13 @@
 import React from "react";
 import { Pause, Play, Star, Trash2 } from "lucide-react";
+import { trackNumber } from "../utils/trackNumber";
 import { DEFAULT_ALBUM_ART } from "../utils/defaultArt";
 
 interface MediaCardProps {
   imageUrl: string;
   title: string;
   subtitle: string;
+  index?: number;
   starred?: boolean;
   playing?: boolean;
   onClick: () => void;
@@ -18,6 +20,7 @@ const MediaCard = React.memo(function MediaCard({
   imageUrl,
   title,
   subtitle,
+  index,
   starred,
   playing = false,
   onClick,
@@ -77,7 +80,10 @@ const MediaCard = React.memo(function MediaCard({
         )}
       </button>
       <div className="album-card-info">
-        <div className="album-card-title">{title}</div>
+        <div className="album-card-title">
+          {index !== undefined && <span className="album-card-num">{trackNumber(index)}</span>}
+          {title}
+        </div>
         <div className="album-card-artist">{subtitle}</div>
       </div>
       {onDelete && (

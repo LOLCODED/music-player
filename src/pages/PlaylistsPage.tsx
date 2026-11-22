@@ -88,6 +88,7 @@ const PlaylistsPage: React.FC = () => {
   return (
     <div className="page">
       <ListPageHeader
+        title="Playlists"
         searchText={searchText}
         onSearchChange={setSearchText}
         placeholder="Search playlists..."
@@ -123,8 +124,9 @@ const PlaylistsPage: React.FC = () => {
           <>
             {viewMode === "grid" ? (
               <div className="album-grid">
-                {playlists.map((playlist) => (
+                {playlists.map((playlist, i) => (
                   <MediaCard
+                    index={i}
                     key={playlist.id}
                     imageUrl={getCoverArtUrl(playlist.coverArt)}
                     title={playlist.name}
@@ -137,8 +139,9 @@ const PlaylistsPage: React.FC = () => {
               </div>
             ) : (
               <MediaTable headers={TABLE_HEADERS}>
-                {playlists.map((playlist) => (
+                {playlists.map((playlist, i) => (
                   <MediaTableRow
+                    index={i}
                     key={playlist.id}
                     title={playlist.name}
                     cells={[

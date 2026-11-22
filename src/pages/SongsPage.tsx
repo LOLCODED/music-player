@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useMusicPlayer } from "../contexts/MusicPlayerContext";
 import { useSongs, SongSortType } from "../hooks/useSongs";
@@ -6,14 +6,12 @@ import { useViewMode } from "../hooks/useViewMode";
 import { useScrollRestoration } from "../hooks/usePageCache";
 import { useStarToggle } from "../hooks/useStarToggle";
 import { useToast } from "../hooks/useToast";
-import { formatTrackDuration } from "../utils/duration";
+import { letterStarts } from "../utils/letterGroups";
 import ScrollSentinel from "../components/ScrollSentinel";
 import ListPageHeader from "../components/ListPageHeader";
 import CenteredSpinner from "../components/CenteredSpinner";
-import MediaCard from "../components/MediaCard";
-import MediaTable, { MediaTableHeader } from "../components/MediaTable";
-import MediaTableRow from "../components/MediaTableRow";
-import StarActionButton from "../components/StarActionButton";
+import SongCollection from "../components/SongCollection";
+import LetterRail from "../components/LetterRail";
 import Toast from "../components/Toast";
 
 const SORT_OPTIONS = [
@@ -27,12 +25,7 @@ const SORT_OPTIONS = [
   { value: "random", label: "Random" },
 ];
 
-const TABLE_HEADERS: MediaTableHeader[] = [
-  { label: "Title" },
-  { label: "Artist" },
-  { label: "Album" },
-  { label: "Time", align: "right", width: 56 },
-];
+const TITLE_SORTS: SongSortType[] = ["titleAsc", "titleDesc"];
 
 const SongsPage: React.FC = () => {
   const { subsonicService } = useAuth();
@@ -40,22 +33,28 @@ const SongsPage: React.FC = () => {
   const [viewMode, setViewMode] = useViewMode("viewMode:songs");
   const { toast, showToast } = useToast();
   const { isStarred, toggleStar } = useStarToggle(subsonicService, showToast);
-
   const {
     songs, loading, searchLoading, error, hasMore,
     searchText, sortType, setSearchText, setSortType,
     loadMore, refresh, getCoverArtUrl,
   } = useSongs(subsonicService);
 
-  const canLoadMore = hasMore && !searchText.trim();
+  const searching = searchText.trim() !== "";
   const showSpinner = (loading || searchLoading) && songs.length === 0;
   const scrollRef = useScrollRestoration<HTMLDivElement>(
     subsonicService, "songs", !showSpinner && songs.length > 0
   );
+  const starts = useMemo(
+    () => (TITLE_SORTS.includes(sortType) && !searching ? letterStarts(songs, (s) => s.title) : null),
+    [songs, sortType, searching]
+  );
+  const meta = !searching && !hasMore && songs.length > 0 ? `${songs.length.toLocaleString()} tracks` : undefined;
 
   return (
-    <div className="page">
+    <div className="page songs-page">
       <ListPageHeader
+        title="Songs"
+        meta={meta}
         searchText={searchText}
         onSearchChange={setSearchText}
         placeholder="Search songs or artists..."
@@ -66,7 +65,6 @@ const SongsPage: React.FC = () => {
         onToggleView={() => setViewMode((v) => (v === "grid" ? "table" : "grid"))}
         onRefresh={refresh}
       />
-
       <div className="page-scroll" ref={scrollRef}>
         {showSpinner ? (
           <CenteredSpinner />
@@ -74,60 +72,22 @@ const SongsPage: React.FC = () => {
           <div className="empty-state">No songs found</div>
         ) : (
           <>
-            {viewMode === "table" ? (
-              <MediaTable headers={TABLE_HEADERS}>
-                {songs.map((song) => {
-                  const starred = isStarred(song.id, song.starred);
-                  return (
-                    <MediaTableRow
-                      key={song.id}
-                      title={song.title}
-                      cells={[song.artist, song.album]}
-                      time={song.duration ? formatTrackDuration(song.duration) : ""}
-                      active={isCurrentSong(song.id)}
-                      playing={isCurrentSong(song.id) && isPlaying}
-                      onClick={() => playSong(song, undefined, songs)}
-                      onPlay={() => playSong(song, undefined, songs)}
-                      trailingAction={
-                        <StarActionButton
-                          starred={starred}
-                          onClick={(e) => toggleStar(song.id, "song", starred, e)}
-                        />
-                      }
-                    />
-                  );
-                })}
-              </MediaTable>
-            ) : (
-              <div className="album-grid">
-                {songs.map((song) => {
-                  const starred = isStarred(song.id, song.starred);
-                  return (
-                    <MediaCard
-                      key={song.id}
-                      imageUrl={getCoverArtUrl(song.coverArt)}
-                      title={song.title}
-                      subtitle={song.artist}
-                      starred={starred}
-                      playing={isCurrentSong(song.id) && isPlaying}
-                      onClick={() => playSong(song, undefined, songs)}
-                      onPlay={() => playSong(song, undefined, songs)}
-                      onToggleStar={(e) => toggleStar(song.id, "song", starred, e)}
-                    />
-                  );
-                })}
-              </div>
-            )}
-            <ScrollSentinel
-              onVisible={loadMore}
-              hasMore={canLoadMore}
-              loading={loading}
-              itemCount={songs.length}
+            <SongCollection
+              songs={songs}
+              viewMode={viewMode}
+              letterStarts={starts}
+              isStarred={isStarred}
+              toggleStar={toggleStar}
+              isCurrentSong={isCurrentSong}
+              isPlaying={isPlaying}
+              onPlay={(song) => playSong(song, undefined, songs)}
+              getCoverArtUrl={getCoverArtUrl}
             />
+            <ScrollSentinel onVisible={loadMore} hasMore={hasMore && !searching} loading={loading} itemCount={songs.length} />
           </>
         )}
       </div>
-
+      {starts && <LetterRail available={new Set(starts.keys())} />}
       <Toast message={toast} />
       <Toast message={error} className="toast-low" />
     </div>

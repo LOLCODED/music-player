@@ -71,7 +71,7 @@ const AlbumDetailsPage: React.FC = () => {
   const totalSeconds = songs.reduce((sum, song) => sum + (song.duration || 0), 0);
 
   return (
-    <div className="page">
+    <div className="page detail-page">
       <DetailHeader title={album?.name || "Album"} />
 
       <div className="page-scroll">

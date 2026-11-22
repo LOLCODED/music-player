@@ -119,6 +119,7 @@ const FavoritesPage: React.FC = () => {
   return (
     <div className="page">
       <ListPageHeader
+        title="Favorites"
         searchText={searchText}
         onSearchChange={setSearchText}
         placeholder={section === "songs" ? "Search songs..." : "Search albums..."}
@@ -137,8 +138,9 @@ const FavoritesPage: React.FC = () => {
           <div className="empty-state">No favorite {section} yet</div>
         ) : viewMode === "table" ? (
           <MediaTable headers={section === "songs" ? SONG_HEADERS : ALBUM_HEADERS}>
-            {items.map((item) => (
+            {items.map((item, i) => (
               <MediaTableRow
+                index={i}
                 key={item.id}
                 title={item.title}
                 cells={item.cells}
@@ -161,8 +163,9 @@ const FavoritesPage: React.FC = () => {
           </MediaTable>
         ) : (
           <div className="album-grid">
-            {items.map((item) => (
+            {items.map((item, i) => (
               <MediaCard
+                index={i}
                 key={item.id}
                 imageUrl={item.imageUrl}
                 title={item.title}

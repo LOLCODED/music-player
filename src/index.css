@@ -725,6 +725,12 @@ select option { background: var(--bg-surface); }
   flex-direction: column;
   overflow-y: auto;
 }
+body:not(.light) .liner-page {
+  --liner-paper: #101010;
+  --liner-ink: #ededed;
+  --liner-muted: #8f8f8f;
+  --liner-rule: #333333;
+}
 .liner-hero {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -745,7 +751,7 @@ select option { background: var(--bg-surface); }
 .liner-name span:nth-child(2),
 .liner-name span:nth-child(3) { display: inline; }
 .liner-record { width: 86px; height: 86px; }
-.liner-record-vinyl { fill: var(--liner-ink); }
+.liner-record-vinyl { fill: #141414; stroke: #2e2e2e; stroke-width: 2; }
 .liner-record-groove { fill: none; stroke: #2e2e2e; stroke-width: 8; }
 .liner-record-label { fill: var(--accent); }
 .liner-record-hole { fill: var(--liner-paper); }
@@ -783,7 +789,7 @@ select option { background: var(--bg-surface); }
   color: var(--liner-ink);
   font-size: 15px;
 }
-.liner-row input::placeholder { color: #a39d90; }
+.liner-row input::placeholder { color: var(--liner-muted); opacity: 0.7; }
 .liner-row:focus-within { border-bottom: 1px solid var(--liner-ink); }
 .liner-connect {
   margin-top: 16px;
@@ -805,7 +811,7 @@ select option { background: var(--bg-surface); }
 }
 .liner-connect svg { color: var(--accent); }
 .liner-connect:disabled { opacity: 0.75; cursor: default; }
-.liner-connect-spinner { width: 14px; height: 14px; border-color: rgba(233, 228, 216, 0.3); border-top-color: var(--liner-paper); }
+.liner-connect-spinner { width: 14px; height: 14px; border-color: color-mix(in srgb, var(--liner-paper) 30%, transparent); border-top-color: var(--liner-paper); }
 
 .liner-heading,
 .login-advanced-toggle {
@@ -835,11 +841,11 @@ select option { background: var(--bg-surface); }
 .liner-saved-name { font-size: 14px; font-weight: 700; }
 .liner-saved-url { font-size: 11px; color: var(--liner-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .liner-saved-remove { color: var(--liner-muted); }
-.liner-saved-remove:hover { color: var(--liner-ink); background: rgba(20, 20, 20, 0.06); }
+.liner-saved-remove:hover { color: var(--liner-ink); background: color-mix(in srgb, var(--liner-ink) 8%, transparent); }
 .login-advanced-toggle { background: none; border: 0; padding: 10px 0; font-family: inherit; cursor: pointer; }
 .login-advanced-fields { display: flex; flex-direction: column; gap: 12px; max-width: 360px; }
 .login-advanced-fields .login-field label { color: var(--liner-muted); }
-.login-advanced-fields input { background: #f4f1ea; border-color: var(--liner-rule); color: var(--liner-ink); }
+.login-advanced-fields input { background: color-mix(in srgb, var(--liner-paper) 85%, var(--liner-ink)); border-color: var(--liner-rule); color: var(--liner-ink); }
 
 @media (min-width: 900px) {
   .liner-page { flex-direction: row; overflow: hidden; height: 100%; }
@@ -882,6 +888,7 @@ select option { background: var(--bg-surface); }
     text-transform: uppercase;
     color: #555;
   }
+  body:not(.light) .liner-sheet { border-left: 1px solid #2a2a2a; }
   .liner-sheet {
     font-size: clamp(14px, 1.1vw, 22px);
     padding: clamp(48px, 6vw, 128px);
@@ -1617,3 +1624,46 @@ button.saved-server-info:disabled { cursor: default; }
   height: 14px;
   border-radius: 50%;
 }
+
+/* Liner-notes elements: only the default skin shows them */
+.page-title-row,
+.sidebar-brand,
+.sidebar-nav-num,
+.content-table-num,
+.album-card-num { display: none; }
+
+/* Letter headings and the A–Z rail on title-sorted song lists */
+.letter-divider td,
+.letter-divider-grid {
+  padding: 18px 12px 4px;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+  border-bottom: 2px solid var(--fg);
+  background: var(--bg);
+  scroll-margin-top: 8px;
+}
+.letter-divider-grid { grid-column: 1 / -1; }
+.songs-page { position: relative; }
+.songs-page:has(.letter-rail) .page-scroll { padding-right: 22px; }
+.letter-rail {
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+}
+.letter-rail button {
+  background: none;
+  border: 0;
+  padding: 1px 5px;
+  font-family: inherit;
+  font-size: 10px;
+  line-height: 1.25;
+  color: var(--fg-muted);
+  cursor: pointer;
+}
+.letter-rail button:hover:not(:disabled) { color: var(--accent); }
+.letter-rail button:disabled { opacity: 0.35; cursor: default; }

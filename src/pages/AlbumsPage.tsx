@@ -66,6 +66,7 @@ const AlbumsPage: React.FC = () => {
   return (
     <div className="page">
       <ListPageHeader
+        title="Albums"
         searchText={searchText}
         onSearchChange={setSearchText}
         placeholder="Search albums or artists..."
@@ -86,10 +87,11 @@ const AlbumsPage: React.FC = () => {
           <>
             {viewMode === "grid" ? (
               <div className="album-grid">
-                {filteredAlbums.map((album) => {
+                {filteredAlbums.map((album, i) => {
                   const starred = isStarred(album.id, album.starred);
                   return (
                     <MediaCard
+                      index={i}
                       key={album.id}
                       imageUrl={getCoverArtUrl(album.coverArt)}
                       title={album.name}
@@ -104,10 +106,11 @@ const AlbumsPage: React.FC = () => {
               </div>
             ) : (
               <MediaTable headers={TABLE_HEADERS}>
-                {filteredAlbums.map((album) => {
+                {filteredAlbums.map((album, i) => {
                   const starred = isStarred(album.id, album.starred);
                   return (
                     <MediaTableRow
+                      index={i}
                       key={album.id}
                       title={album.name}
                       cells={[album.artist]}
