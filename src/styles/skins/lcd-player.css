@@ -5,6 +5,7 @@
     grid-template-columns: auto auto minmax(0, 1fr) minmax(240px, 520px) minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr) 24px;
     column-gap: 16px;
+    row-gap: 0;
     height: 72px;
     padding: 6px 18px;
     line-height: 1.25;
