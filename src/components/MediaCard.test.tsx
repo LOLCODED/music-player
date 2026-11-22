@@ -113,3 +113,28 @@ describe("MediaCard", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+describe("MediaCard cover upload", () => {
+  it("offers a cover button only when asked, without opening the card", async () => {
+    const onClick = vi.fn();
+    const onUploadCover = vi.fn();
+    const { rerender } = render(
+      <MediaCard imageUrl="" title="Mix" subtitle="" onClick={onClick} onPlay={() => {}} />
+    );
+    expect(screen.queryByRole("button", { name: "Change cover for Mix" })).not.toBeInTheDocument();
+
+    rerender(
+      <MediaCard imageUrl="" title="Mix" subtitle="" onClick={onClick} onPlay={() => {}} onUploadCover={onUploadCover} />
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Change cover for Mix" }));
+    expect(onUploadCover).toHaveBeenCalled();
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("shows progress and blocks a second upload while one runs", () => {
+    render(
+      <MediaCard imageUrl="" title="Mix" subtitle="" onClick={() => {}} onPlay={() => {}} onUploadCover={() => {}} uploadingCover />
+    );
+    expect(screen.getByRole("button", { name: "Change cover for Mix" })).toBeDisabled();
+  });
+});

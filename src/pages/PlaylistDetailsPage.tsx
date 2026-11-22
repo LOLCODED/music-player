@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { ImagePlus, Play, Repeat, Repeat1, Shuffle, Trash2 } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -6,7 +6,7 @@ import { useMusicPlayer } from "../contexts/MusicPlayerContext";
 import { SubsonicSong } from "../types/subsonic";
 import { buildPseudoAlbum } from "../utils/playlist";
 import { usePlaylistDetails } from "../hooks/usePlaylistDetails";
-import { usePlaylistCover } from "../hooks/usePlaylistCover";
+import { usePlaylistCoverPicker } from "../hooks/usePlaylistCoverPicker";
 import { clearCachedState } from "../hooks/usePageCache";
 import { useStarToggle } from "../hooks/useStarToggle";
 import { useToast } from "../hooks/useToast";
@@ -18,12 +18,11 @@ import DetailHero from "../components/DetailHero";
 import TrackListHeader from "../components/TrackListHeader";
 import TrackRow from "../components/TrackRow";
 import ConfirmDialog from "../components/ConfirmDialog";
-import CoverPasswordForm from "../components/CoverPasswordForm";
 import Toast from "../components/Toast";
 
 const PlaylistDetailsPage: React.FC = () => {
   const { id = "" } = useParams();
-  const { subsonicService, subsonicConfig } = useAuth();
+  const { subsonicService } = useAuth();
   const {
     playAlbum, isCurrentSong, isPlaying, currentSong,
     shuffle, repeatMode, toggleShuffle, toggleRepeat,
@@ -35,19 +34,13 @@ const PlaylistDetailsPage: React.FC = () => {
 
   const { playlist, songs, loading, removeSong, refresh, getCoverArtUrl } =
     usePlaylistDetails(id, subsonicService, showToast);
-  const coverInputRef = useRef<HTMLInputElement>(null);
   const handleCoverUploaded = useCallback(() => {
     clearCachedState(subsonicService, "playlists:");
     showToast("Cover updated");
     void refresh();
   }, [subsonicService, showToast, refresh]);
-  const cover = usePlaylistCover(id, subsonicConfig, handleCoverUploaded, showToast);
-
-  const handleCoverPicked = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (file) cover.chooseFile(file);
-  };
+  const cover = usePlaylistCoverPicker(handleCoverUploaded, showToast);
+  const uploadingCover = cover.uploadingId === id;
   const { isStarred, toggleStar } = useStarToggle(subsonicService, showToast);
 
   const handleRemoveSong = async (songIndex: number) => {
@@ -118,32 +111,17 @@ const PlaylistDetailsPage: React.FC = () => {
                     </button>
                     <button
                       className="btn"
-                      onClick={() => coverInputRef.current?.click()}
-                      disabled={cover.state.step === "uploading"}
+                      onClick={() => cover.pick(id)}
+                      disabled={uploadingCover}
                       aria-label="Change cover"
                       title="Change cover"
                     >
-                      {cover.state.step === "uploading" ? <span className="spinner" /> : <ImagePlus size={14} />}
+                      {uploadingCover ? <span className="spinner" /> : <ImagePlus size={14} />}
                     </button>
-                    <input
-                      ref={coverInputRef}
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp,image/gif"
-                      hidden
-                      onChange={handleCoverPicked}
-                    />
                   </>
                 }
               >
-                {cover.state.step === "needsPassword" && subsonicConfig && (
-                  <CoverPasswordForm
-                    username={subsonicConfig.username}
-                    busy={false}
-                    error={cover.state.error}
-                    onSubmit={cover.submitPassword}
-                    onCancel={cover.cancel}
-                  />
-                )}
+                {cover.picker}
               </DetailHero>
             )}
 

@@ -8,47 +8,51 @@ import {
 import { clearNativeSession, getNativeSession, setNativeSession } from "../utils/nativeSession";
 import { toErrorMessage } from "../utils/errors";
 
+interface PendingUpload {
+  playlistId: string;
+  file: File;
+}
+
 type CoverState =
   | { step: "idle" }
-  | { step: "needsPassword"; file: File; error?: string }
-  | { step: "uploading" };
+  | ({ step: "needsPassword"; error?: string } & PendingUpload)
+  | { step: "uploading"; playlistId: string };
 
 export function usePlaylistCover(
-  playlistId: string,
   config: SubsonicConfig | null,
-  onUploaded: () => void,
+  onUploaded: (playlistId: string) => void,
   onError: (msg: string) => void
 ) {
   const [state, setState] = useState<CoverState>({ step: "idle" });
 
   const upload = useCallback(
-    async (file: File, token: string) => {
+    async ({ playlistId, file }: PendingUpload, token: string) => {
       if (!config) return;
-      setState({ step: "uploading" });
+      setState({ step: "uploading", playlistId });
       try {
         const refreshed = await uploadPlaylistCover(config.serverUrl, token, playlistId, file);
         setNativeSession(config.serverUrl, config.username, refreshed ?? token);
         setState({ step: "idle" });
-        onUploaded();
+        onUploaded(playlistId);
       } catch (err) {
         if (err instanceof NativeAuthError) {
           clearNativeSession(config.serverUrl, config.username);
-          setState({ step: "needsPassword", file });
+          setState({ step: "needsPassword", playlistId, file });
           return;
         }
         setState({ step: "idle" });
         onError(toErrorMessage(err));
       }
     },
-    [config, playlistId, onUploaded, onError]
+    [config, onUploaded, onError]
   );
 
   const chooseFile = useCallback(
-    (file: File) => {
+    (playlistId: string, file: File) => {
       if (!config) return;
       const token = getNativeSession(config.serverUrl, config.username);
-      if (token) void upload(file, token);
-      else setState({ step: "needsPassword", file });
+      if (token) void upload({ playlistId, file }, token);
+      else setState({ step: "needsPassword", playlistId, file });
     },
     [config, upload]
   );
@@ -56,13 +60,13 @@ export function usePlaylistCover(
   const submitPassword = useCallback(
     async (password: string) => {
       if (!config || state.step !== "needsPassword") return;
-      const { file } = state;
-      setState({ step: "uploading" });
+      const pending = { playlistId: state.playlistId, file: state.file };
+      setState({ step: "uploading", playlistId: pending.playlistId });
       try {
         const token = await nativeLogin(config.serverUrl, config.username, password);
-        await upload(file, token);
+        await upload(pending, token);
       } catch (err) {
-        setState({ step: "needsPassword", file, error: toErrorMessage(err) });
+        setState({ step: "needsPassword", ...pending, error: toErrorMessage(err) });
       }
     },
     [config, state, upload]

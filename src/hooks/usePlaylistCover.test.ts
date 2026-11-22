@@ -28,7 +28,7 @@ describe("usePlaylistCover", () => {
   afterEach(() => vi.unstubAllGlobals());
 
   const setup = () =>
-    renderHook(() => usePlaylistCover("pl1", config, onUploaded, onError)).result;
+    renderHook(() => usePlaylistCover(config, onUploaded, onError)).result;
 
   it("asks for the password once, then uploads and keeps the session", async () => {
     fetchMock
@@ -36,7 +36,7 @@ describe("usePlaylistCover", () => {
       .mockResolvedValueOnce(respond(200, {}, { "x-nd-authorization": "Bearer jwt2" }));
     const result = setup();
 
-    act(() => result.current.chooseFile(file));
+    act(() => result.current.chooseFile("pl1", file));
     expect(result.current.state.step).toBe("needsPassword");
     expect(fetchMock).not.toHaveBeenCalled();
 
@@ -47,7 +47,7 @@ describe("usePlaylistCover", () => {
     expect(uploadUrl).toBe("https://music.example/api/playlist/pl1/image");
     expect(uploadInit.headers["x-nd-authorization"]).toBe("Bearer jwt1");
     expect((uploadInit.body as FormData).get("image")).toBeInstanceOf(File);
-    expect(onUploaded).toHaveBeenCalled();
+    expect(onUploaded).toHaveBeenCalledWith("pl1");
     expect(getNativeSession(config.serverUrl, "me")).toBe("jwt2");
     expect(localStorage.getItem("navidromeSessions")).not.toContain("secret");
   });
@@ -57,7 +57,7 @@ describe("usePlaylistCover", () => {
     fetchMock.mockResolvedValueOnce(respond(200));
     const result = setup();
 
-    act(() => result.current.chooseFile(file));
+    act(() => result.current.chooseFile("pl1", file));
     await waitFor(() => expect(onUploaded).toHaveBeenCalled());
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
@@ -67,7 +67,7 @@ describe("usePlaylistCover", () => {
     fetchMock.mockResolvedValueOnce(respond(401));
     const result = setup();
 
-    act(() => result.current.chooseFile(file));
+    act(() => result.current.chooseFile("pl1", file));
     await waitFor(() => expect(result.current.state.step).toBe("needsPassword"));
     expect(getNativeSession(config.serverUrl, "me")).toBeNull();
     expect(onUploaded).not.toHaveBeenCalled();
@@ -77,7 +77,7 @@ describe("usePlaylistCover", () => {
     fetchMock.mockResolvedValueOnce(respond(401));
     const result = setup();
 
-    act(() => result.current.chooseFile(file));
+    act(() => result.current.chooseFile("pl1", file));
     await act(() => result.current.submitPassword("nope"));
 
     expect(result.current.state).toMatchObject({ step: "needsPassword", error: "Wrong password" });
@@ -89,7 +89,7 @@ describe("usePlaylistCover", () => {
     fetchMock.mockResolvedValueOnce(respond(403));
     const result = setup();
 
-    act(() => result.current.chooseFile(file));
+    act(() => result.current.chooseFile("pl1", file));
     await waitFor(() => expect(onError).toHaveBeenCalled());
     expect(result.current.state.step).toBe("idle");
   });

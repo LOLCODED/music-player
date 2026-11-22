@@ -6,6 +6,7 @@ import { SubsonicPlaylist } from "../types/subsonic";
 import { buildPseudoAlbum } from "../utils/playlist";
 import { usePlaylists, PlaylistSortType } from "../hooks/usePlaylists";
 import { useScrollRestoration } from "../hooks/usePageCache";
+import { usePlaylistCoverPicker } from "../hooks/usePlaylistCoverPicker";
 import { useViewMode } from "../hooks/useViewMode";
 import { useToast } from "../hooks/useToast";
 import { useShufflePlay } from "../hooks/useShufflePlay";
@@ -53,6 +54,10 @@ const PlaylistsPage: React.FC = () => {
   const scrollRef = useScrollRestoration<HTMLDivElement>(
     subsonicService, "playlists", playlists.length > 0
   );
+  const cover = usePlaylistCoverPicker(() => {
+    showToast("Cover updated");
+    void refresh();
+  }, showToast);
 
   const handleCreate = async (name: string) => {
     try {
@@ -110,6 +115,7 @@ const PlaylistsPage: React.FC = () => {
         }
       />
 
+      {cover.picker}
       <div className="page-scroll" ref={scrollRef}>
         {loading && playlists.length === 0 ? (
           <CenteredSpinner />
@@ -134,6 +140,8 @@ const PlaylistsPage: React.FC = () => {
                     onClick={() => openPlaylist(playlist)}
                     onPlay={() => handlePlay(playlist)}
                     onDelete={() => setPlaylistToDelete(playlist)}
+                    onUploadCover={() => cover.pick(playlist.id)}
+                    uploadingCover={cover.uploadingId === playlist.id}
                   />
                 ))}
               </div>

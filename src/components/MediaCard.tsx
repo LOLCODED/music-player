@@ -1,5 +1,5 @@
 import React from "react";
-import { Pause, Play, Star, Trash2 } from "lucide-react";
+import { ImagePlus, Pause, Play, Star, Trash2 } from "lucide-react";
 import { trackNumber } from "../utils/trackNumber";
 import { DEFAULT_ALBUM_ART } from "../utils/defaultArt";
 
@@ -14,6 +14,8 @@ interface MediaCardProps {
   onPlay: (e: React.MouseEvent) => void;
   onToggleStar?: (e: React.MouseEvent) => void;
   onDelete?: (e: React.MouseEvent) => void;
+  onUploadCover?: (e: React.MouseEvent) => void;
+  uploadingCover?: boolean;
 }
 
 const MediaCard = React.memo(function MediaCard({
@@ -27,6 +29,8 @@ const MediaCard = React.memo(function MediaCard({
   onPlay,
   onToggleStar,
   onDelete,
+  onUploadCover,
+  uploadingCover = false,
 }: MediaCardProps) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
@@ -66,6 +70,17 @@ const MediaCard = React.memo(function MediaCard({
           aria-label={starred ? "Remove from favorites" : "Add to favorites"}
         >
           <Star size={13} fill={starred ? "currentColor" : "none"} />
+        </button>
+      )}
+      {onUploadCover && (
+        <button
+          className={`album-card-star album-card-upload${uploadingCover ? " busy" : ""}`}
+          onClick={stop(onUploadCover)}
+          disabled={uploadingCover}
+          aria-label={`Change cover for ${title}`}
+          title="Change cover"
+        >
+          {uploadingCover ? <span className="spinner album-card-upload-spinner" /> : <ImagePlus size={13} />}
         </button>
       )}
       <button
