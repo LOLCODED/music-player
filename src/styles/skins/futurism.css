@@ -208,3 +208,10 @@ body[data-skin="futurism"] .player-floater-inner {
   body[data-skin="futurism"] .album-card-play,
   body[data-skin="futurism"] .table-play-btn { padding: 0; background-clip: border-box; }
 }
+
+@media (max-width: 767px), (max-height: 499px) {
+  body[data-skin="futurism"] .modal-box { clip-path: none; border-radius: 0; border-bottom: 0; }
+  body[data-skin="futurism"] .page-title { font-size: 26px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--accent); text-shadow: var(--fx-glow); }
+  body[data-skin="futurism"] .page-title-row { border-bottom: 1px solid rgba(0, 229, 255, 0.5); }
+  body[data-skin="futurism"] .action-sheet-done { background: var(--fx-gradient); color: #04060c; border-radius: 0; clip-path: var(--fx-cut-sm); }
+}

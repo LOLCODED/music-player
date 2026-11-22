@@ -1,6 +1,8 @@
 import React from "react";
 import { LayoutGrid, List } from "lucide-react";
 import PageActions from "./PageActions";
+import PageTitle from "./PageTitle";
+import { useIsDesktop } from "../hooks/useIsDesktop";
 
 export interface SortOption {
   value: string;
@@ -35,47 +37,55 @@ const ListPageHeader: React.FC<ListPageHeaderProps> = ({
   extra,
   title,
   meta,
-}) => (
-  <div className="page-header">
-    {title && (
-      <div className="page-title-row">
-        <h1 className="page-title">{title}</h1>
-        {meta && <span className="page-title-meta">{meta}</span>}
+}) => {
+  const isDesktop = useIsDesktop();
+  const actions = <PageActions onRefresh={onRefresh} title={title} />;
+
+  return (
+    <div className="page-header">
+      {title && (
+        <PageTitle title={title} meta={meta}>
+          {!isDesktop && actions}
+        </PageTitle>
+      )}
+      <div className="page-header-controls">
+        <input
+          type="search"
+          className="page-header-search"
+          value={searchText}
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder={placeholder}
+          aria-label={placeholder}
+          enterKeyHint="search"
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
+        />
+        <select
+          className="page-header-sort"
+          value={sortType}
+          onChange={(e) => onSortChange(e.target.value)}
+          aria-label="Sort"
+        >
+          {sortOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <button
+          className="btn-icon"
+          onClick={onToggleView}
+          title={viewMode === "grid" ? "Switch to list view" : "Switch to grid view"}
+          aria-label="Toggle view"
+        >
+          {viewMode === "grid" ? <List size={16} /> : <LayoutGrid size={16} />}
+        </button>
+        {extra}
       </div>
-    )}
-    <div className="page-header-controls">
-      <input
-        type="search"
-        className="page-header-search"
-        value={searchText}
-        onChange={(e) => onSearchChange(e.target.value)}
-        placeholder={placeholder}
-        aria-label={placeholder}
-      />
-      <select
-        className="page-header-sort"
-        value={sortType}
-        onChange={(e) => onSortChange(e.target.value)}
-        aria-label="Sort"
-      >
-        {sortOptions.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-      <button
-        className="btn-icon"
-        onClick={onToggleView}
-        title={viewMode === "grid" ? "Switch to list view" : "Switch to grid view"}
-        aria-label="Toggle view"
-      >
-        {viewMode === "grid" ? <List size={16} /> : <LayoutGrid size={16} />}
-      </button>
+      {(isDesktop || !title) && actions}
     </div>
-    {extra}
-    <PageActions onRefresh={onRefresh} />
-  </div>
-);
+  );
+};
 
 export default ListPageHeader;

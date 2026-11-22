@@ -5,13 +5,13 @@ import Modal from "./Modal";
 
 function renderModal(showCloseButton = false) {
   const onClose = vi.fn();
-  const { container, unmount } = render(
+  const { unmount } = render(
     <Modal title="Create playlist" onClose={onClose} showCloseButton={showCloseButton}>
       <input aria-label="Playlist name" />
       <button>Save</button>
     </Modal>
   );
-  const overlay = container.querySelector<HTMLElement>(".modal-overlay");
+  const overlay = document.querySelector<HTMLElement>(".modal-overlay");
   if (!overlay) throw new Error("Modal did not render an overlay");
   return { overlay, onClose, unmount, user: userEvent.setup() };
 }

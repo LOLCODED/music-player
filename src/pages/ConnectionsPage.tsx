@@ -13,6 +13,7 @@ import { withTokenAuth } from "../services/SubsonicBase";
 import AddConnectionDialog from "../components/AddConnectionDialog";
 import SaveConnectionDialog from "../components/SaveConnectionDialog";
 import Toast from "../components/Toast";
+import PageTitle from "../components/PageTitle";
 
 interface ConnectionRowProps {
   connection: SavedConnection;
@@ -103,7 +104,8 @@ const ConnectionsPage: React.FC = () => {
   return (
     <div className="page">
       <div className="page-header">
-        <span className="page-header-title">Connections</span>
+        <span className="page-header-title desktop-only">Connections</span>
+        <PageTitle title="Connections" phoneOnly />
         <button className="btn btn-primary" onClick={() => setShowAddDialog(true)}>
           <Plus size={14} /> Add
         </button>

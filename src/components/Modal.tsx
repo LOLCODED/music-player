@@ -1,4 +1,5 @@
 import React, { useEffect, useId, useRef } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 // Prefer focusing a form field so the close button does not steal focus.
@@ -10,6 +11,7 @@ interface ModalProps {
   title: string;
   onClose: () => void;
   showCloseButton?: boolean;
+  className?: string;
   children: React.ReactNode;
 }
 
@@ -17,6 +19,7 @@ const Modal: React.FC<ModalProps> = ({
   title,
   onClose,
   showCloseButton = false,
+  className,
   children,
 }) => {
   const boxRef = useRef<HTMLDivElement>(null);
@@ -39,11 +42,12 @@ const Modal: React.FC<ModalProps> = ({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
-  return (
+  // Portalled so a transformed page (during a swipe transition) can't become its containing block.
+  return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div
         ref={boxRef}
-        className="modal-box"
+        className={className ? `modal-box ${className}` : "modal-box"}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -61,7 +65,8 @@ const Modal: React.FC<ModalProps> = ({
         )}
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

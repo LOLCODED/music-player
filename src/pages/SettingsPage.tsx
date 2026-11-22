@@ -5,6 +5,7 @@ import { useIsDesktop } from "../hooks/useIsDesktop";
 import { LayoutDiagram } from "../components/LayoutDiagram";
 import { LAYOUT_OPTIONS, FLOATER_CORNERS } from "../components/layoutOptions";
 import SkinPicker from "../components/SkinPicker";
+import PageTitle from "../components/PageTitle";
 
 const ACCENT_COLORS = [
   { label: "Purple", value: "#8b5cf6" },
@@ -33,7 +34,8 @@ const SettingsPage: React.FC = () => {
   return (
     <div className="page">
       <div className="page-header">
-        <span className="page-header-title">Settings</span>
+        <span className="page-header-title desktop-only">Settings</span>
+        <PageTitle title="Settings" phoneOnly />
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "0 20px 32px" }}>

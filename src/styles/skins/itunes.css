@@ -308,3 +308,12 @@ body[data-skin="itunes"] .player-floater .progress-bar { margin: 0 10px 10px; }
   body[data-skin="itunes"] .mobile-dock .player-area:not(:empty) + .tab-btn-bar { border-top: 1px solid #8e8e8e; }
   body[data-skin="itunes"] .mobile-dock .player-mini .btn-icon { color: #1e1e1e; }
 }
+
+@media (max-width: 767px), (max-height: 499px) {
+  body[data-skin="itunes"] .modal-box { border-radius: 10px 10px 0 0; }
+  body[data-skin="itunes"] .page-title { font-size: 28px; font-weight: 700; letter-spacing: -0.01em; text-shadow: 0 1px 0 #fff; }
+  body[data-skin="itunes"] .page-title-row { border-bottom: 1px solid #8e8e8e; }
+  body[data-skin="itunes"] .page-title-meta { color: #444; }
+  body[data-skin="itunes"] .action-sheet-item { border-bottom: 1px solid #d0d0d0; }
+  body[data-skin="itunes"] .action-sheet-done { background: linear-gradient(#ffffff, #c4c4c4); color: #1e1e1e; border: 1px solid #777; border-radius: 8px; }
+}

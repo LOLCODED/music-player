@@ -150,3 +150,116 @@
     top: -22px;
   }
 }
+
+/* Phone page headers: big title in every skin, full-width search, chips below. */
+@media (min-width: 768px) and (min-height: 500px) {
+  .page-header .page-title-row.phone-only { display: none; }
+}
+@media (max-width: 767px), (max-height: 499px) {
+  .page-header .desktop-only { display: none; }
+  .page-header { flex-wrap: wrap; padding: 14px 16px 10px; row-gap: 10px; }
+  .page-title-row {
+    display: flex;
+    width: 100%;
+    align-items: flex-end;
+    gap: 12px;
+    padding-bottom: 10px;
+    border-bottom: 3px solid var(--fg);
+  }
+  .page-title {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    font-size: 34px;
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    overflow-wrap: anywhere;
+  }
+  .page-title-meta { font-size: 12px; color: var(--fg-muted); padding-bottom: 4px; white-space: nowrap; }
+  .page-actions-more { margin: 0 -10px -6px 0; color: var(--fg); }
+  .page-header-controls { width: 100%; flex-wrap: wrap; gap: 8px; }
+  .page-header-search { flex: 1 0 100%; max-width: none; min-height: 44px; }
+  .page-header-sort { flex: 0 1 auto; min-width: 0; max-width: 60%; min-height: 40px; width: auto; }
+  .page-header-controls .btn-icon:first-of-type { margin-left: auto; }
+  .page-header > .btn { margin-left: auto; }
+}
+/* Landscape phone: title, search and actions share one row to save height. */
+@media (max-height: 499px) {
+  .app-shell .page-header { flex-wrap: nowrap; padding: 8px 16px; border-bottom: 1px solid var(--border); }
+  .app-shell .page-header .page-title-row { display: contents; }
+  .app-shell .page-header .page-title { flex: 0 0 auto; font-size: 24px; }
+  .app-shell .page-header .page-title-meta { display: none; }
+  .app-shell .page-header .page-actions-more { order: 3; margin: 0 -10px 0 0; }
+  .page-header-controls { flex: 1; flex-wrap: nowrap; width: auto; }
+  .page-header-search { flex: 1 1 auto; }
+  .page-header-controls .btn-icon:first-of-type { margin-left: 0; }
+}
+
+/* Dialogs become bottom sheets on phones. */
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.action-sheet-list { display: flex; flex-direction: column; }
+.action-sheet-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 52px;
+  padding: 0 4px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px dashed var(--border);
+  color: var(--fg);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+.action-sheet-item:hover { background: var(--bg-elevated); }
+.action-sheet-item.danger { color: var(--error); }
+.action-sheet-done {
+  min-height: 50px;
+  margin-top: 6px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--fg);
+  color: var(--bg);
+  font: inherit;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+@media (max-width: 767px), (max-height: 499px) {
+  .modal-overlay { align-items: flex-end; padding: 0; }
+  .modal-box {
+    position: relative;
+    max-width: 560px;
+    border-bottom: 0;
+    border-radius: 16px 16px 0 0;
+    padding: 26px 20px calc(18px + env(safe-area-inset-bottom));
+    max-height: calc(100% - env(safe-area-inset-top) - 24px);
+    overflow-y: auto;
+    animation: sheet-up 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .modal-box::before {
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 36px;
+    height: 4px;
+    margin-left: -18px;
+    border-radius: 2px;
+    background: var(--fg-dim);
+    opacity: 0.6;
+  }
+  .modal-box h3 { font-size: 16px; font-weight: 800; }
+  .modal-actions .btn { flex: 1; justify-content: center; }
+  body[data-keyboard="open"] .modal-box { padding-bottom: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal-box { animation: none; }
+}
