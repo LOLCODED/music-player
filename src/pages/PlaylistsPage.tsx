@@ -67,7 +67,7 @@ const PlaylistsPage: React.FC = () => {
     () => (NAME_SORTS.includes(sortType) && !searchText.trim() ? letterStarts(playlists, byName) : null),
     [playlists, sortType, searchText]
   );
-  const jumpToLetter = useLetterJump(starts, noWindow, playlists.length);
+  const jumpToLetter = useLetterJump(starts, noWindow, playlists.length, scrollRef);
   const cover = usePlaylistCoverPicker(() => {
     showToast("Cover updated");
     void refresh();

@@ -66,7 +66,7 @@ const SongsPage: React.FC = () => {
   const { visible, hasHidden, showMore, ensureVisible } = useRenderWindow(
     subsonicService, "songs", songs, RENDER_PAGE_SIZE
   );
-  const jumpToLetter = useLetterJump(starts, ensureVisible, visible.length);
+  const jumpToLetter = useLetterJump(starts, ensureVisible, visible.length, scrollRef);
 
   return (
     <div className="page songs-page lettered-page">

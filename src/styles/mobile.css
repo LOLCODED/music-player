@@ -280,3 +280,48 @@
   .content-table td.content-table-time { width: 1%; max-width: none; padding-right: 4px; font-size: 12px; }
   .content-table td:last-child { width: 44px; max-width: none; padding: 0; overflow: visible; }
 }
+
+/* Touch letter rail: spans the list, scrubs under the finger, shows the letter in a bubble. */
+@media (pointer: coarse) {
+  .lettered-page:has(.letter-rail) .page-scroll { padding-right: 32px; }
+  .letter-rail {
+    right: 0;
+    width: 32px;
+    transform: none;
+    justify-content: space-between;
+    padding: 6px 0;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    z-index: 6;
+  }
+  .letter-rail button {
+    flex: 1 1 0;
+    min-height: 0;
+    padding: 0;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .letter-rail.compact button:nth-child(even) { display: none; }
+  .letter-rail.scrubbing { background: color-mix(in srgb, var(--fg) 8%, transparent); border-radius: 16px; }
+  .letter-rail-bubble {
+    position: absolute;
+    right: 56px;
+    top: 50%;
+    width: 76px;
+    height: 76px;
+    margin-top: -38px;
+    display: grid;
+    place-items: center;
+    background: var(--fg);
+    color: var(--bg);
+    font-size: 44px;
+    font-weight: 800;
+    border-radius: 6px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    pointer-events: none;
+  }
+  body[data-keyboard="open"] .letter-rail { display: none; }
+  body[data-keyboard="open"] .lettered-page .page-scroll { padding-right: 0; }
+}

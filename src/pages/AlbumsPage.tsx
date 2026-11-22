@@ -71,11 +71,11 @@ const AlbumsPage: React.FC = () => {
     () => (sortKey && !searching ? letterStarts(filteredAlbums, sortKey) : null),
     [filteredAlbums, sortKey, searching]
   );
-  const jumpToLetter = useLetterJump(starts, ensureVisible, visible.length);
   const keyOf = sortKey ?? ((a: SubsonicAlbum) => a.name);
   const scrollRef = useScrollRestoration<HTMLDivElement>(
     subsonicService, "albums", !showSpinner && filteredAlbums.length > 0
   );
+  const jumpToLetter = useLetterJump(starts, ensureVisible, visible.length, scrollRef);
 
   return (
     <div className="page lettered-page">
