@@ -37,10 +37,25 @@ describe("useMediaSession", () => {
     expect(skipNext).toHaveBeenCalled();
   });
 
-  it("opts out of seek buttons so iOS shows next/previous track", () => {
-    renderHook(() => useMediaSession(song, true, { togglePlayPause: vi.fn(), skipNext: vi.fn(), skipPrevious: vi.fn() }));
-    expect(handlers.has("seekbackward")).toBe(true);
-    expect(handlers.get("seekbackward")).toBeNull();
-    expect(handlers.get("seekforward")).toBeNull();
+  it("re-registers the handlers whenever media starts playing", () => {
+    const skipNext = vi.fn();
+    renderHook(() => useMediaSession(song, true, { togglePlayPause: vi.fn(), skipNext, skipPrevious: vi.fn() }));
+    handlers.clear();
+
+    const audio = document.createElement("audio");
+    document.body.appendChild(audio);
+    audio.dispatchEvent(new Event("playing"));
+    audio.remove();
+
+    handlers.get("nexttrack")?.();
+    expect(skipNext).toHaveBeenCalled();
+  });
+
+  it("stops re-registering after unmount", () => {
+    const { unmount } = renderHook(() => useMediaSession(song, true, { togglePlayPause: vi.fn(), skipNext: vi.fn(), skipPrevious: vi.fn() }));
+    unmount();
+    handlers.clear();
+    document.dispatchEvent(new Event("playing"));
+    expect(handlers.size).toBe(0);
   });
 });

@@ -39,24 +39,28 @@ export function useMediaSession(song: Song | null, isPlaying: boolean, handlers:
   useEffect(() => {
     if (!("mediaSession" in navigator)) return;
     const session = navigator.mediaSession;
-    const actions: [MediaSessionAction, MediaSessionActionHandler | null][] = [
+    const actions: [MediaSessionAction, MediaSessionActionHandler][] = [
       ["play", () => { if (!playingRef.current) handlersRef.current.togglePlayPause(); }],
       ["pause", () => { if (playingRef.current) handlersRef.current.togglePlayPause(); }],
       ["nexttrack", () => handlersRef.current.skipNext()],
       ["previoustrack", () => handlersRef.current.skipPrevious()],
-      // iOS shows ±10s skip buttons in place of next/previous unless seeking is
-      // explicitly unsupported.
-      ["seekbackward", null],
-      ["seekforward", null],
     ];
-    for (const [action, handler] of actions) {
-      try {
-        session.setActionHandler(action, handler);
-      } catch {
-        // Older WebKit throws for actions it doesn't support.
+    const register = () => {
+      for (const [action, handler] of actions) {
+        try {
+          session.setActionHandler(action, handler);
+        } catch {
+          // Older WebKit throws for actions it doesn't support.
+        }
       }
-    }
+    };
+    register();
+    // WebKit forgets handlers registered while no media element is playing and
+    // falls back to ±10s skip buttons, so re-register whenever playback starts.
+    // Media events don't bubble; capture them at the document instead.
+    document.addEventListener("playing", register, true);
     return () => {
+      document.removeEventListener("playing", register, true);
       for (const [action] of actions) {
         try {
           session.setActionHandler(action, null);
