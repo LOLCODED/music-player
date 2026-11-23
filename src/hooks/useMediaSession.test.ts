@@ -36,4 +36,11 @@ describe("useMediaSession", () => {
     handlers.get("nexttrack")?.();
     expect(skipNext).toHaveBeenCalled();
   });
+
+  it("opts out of seek buttons so iOS shows next/previous track", () => {
+    renderHook(() => useMediaSession(song, true, { togglePlayPause: vi.fn(), skipNext: vi.fn(), skipPrevious: vi.fn() }));
+    expect(handlers.has("seekbackward")).toBe(true);
+    expect(handlers.get("seekbackward")).toBeNull();
+    expect(handlers.get("seekforward")).toBeNull();
+  });
 });

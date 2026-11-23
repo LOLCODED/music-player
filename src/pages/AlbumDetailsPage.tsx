@@ -69,7 +69,7 @@ const AlbumDetailsPage: React.FC = () => {
                   <>
                     <button
                       className="btn btn-primary"
-                      onClick={() => songs.length > 0 && playAlbum(album, songs, 0)}
+                      onClick={() => songs.length > 0 && playAlbum(album, songs)}
                     >
                       <Play size={14} fill="currentColor" /> Play Album
                     </button>

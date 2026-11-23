@@ -169,19 +169,20 @@ export const MusicPlayerProvider: React.FC<MusicPlayerProviderProps> = ({
     (
       album: SubsonicAlbum,
       songs: SubsonicSong[],
-      startIndex: number = 0,
+      startIndex?: number,
       playlistId?: string
     ) => {
       if (songs.length === 0) return;
       if (playlistId) recordPlaylistPlay(playlistId);
+      const defaultIndex = shuffle ? Math.floor(Math.random() * songs.length) : 0;
       startPlayback(
         songs,
-        startIndex,
+        startIndex ?? defaultIndex,
         album,
         playlistId ? `/playlist/${playlistId}` : `/album/${album.id}`
       );
     },
-    [startPlayback]
+    [shuffle, startPlayback]
   );
 
   const togglePlayPause = useCallback(() => {

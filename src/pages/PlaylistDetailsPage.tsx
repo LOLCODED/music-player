@@ -54,7 +54,7 @@ const PlaylistDetailsPage: React.FC = () => {
   };
 
   // Playing through the playlist keeps its context (queue + playlist id).
-  const playFromIndex = (index: number) => {
+  const playFromIndex = (index?: number) => {
     if (!playlist || songs.length === 0) return;
     playAlbum(buildPseudoAlbum(playlist), songs, index, playlist.id);
   };
@@ -90,7 +90,7 @@ const PlaylistDetailsPage: React.FC = () => {
                   <>
                     <button
                       className="btn btn-primary"
-                      onClick={() => playFromIndex(0)}
+                      onClick={() => playFromIndex()}
                       disabled={songs.length === 0}
                     >
                       <Play size={14} fill="currentColor" /> Play Playlist

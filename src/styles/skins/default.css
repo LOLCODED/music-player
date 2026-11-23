@@ -200,6 +200,7 @@ body[data-skin="default"] .detail-page .page-scroll > div:not(.detail-hero):not(
     display: grid;
     grid-template-columns: minmax(340px, 38%) minmax(0, 1fr);
     align-items: start;
+    container-type: size;
   }
   body[data-skin="default"] .detail-page .centered-spinner { grid-column: 1 / -1; }
   body[data-skin="default"] .detail-hero {
@@ -207,7 +208,8 @@ body[data-skin="default"] .detail-page .page-scroll > div:not(.detail-hero):not(
     border-right: 1px solid var(--border);
     position: sticky;
     top: 0;
-    min-height: 100%;
+    height: 100cqh;
+    overflow-y: auto;
     box-sizing: border-box;
     flex-direction: column;
     align-items: flex-start;

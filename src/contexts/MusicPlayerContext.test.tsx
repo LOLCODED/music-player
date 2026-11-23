@@ -199,6 +199,34 @@ describe("shuffle", () => {
     expect(player.result.current.getCurrentSongIndex()).toBe(2);
   });
 
+  it("starts at a random track when playing without a start index", () => {
+    const player = renderPlayer();
+    act(() => player.result.current.toggleShuffle());
+    const random = vi.spyOn(Math, "random").mockReturnValue(0.99);
+
+    act(() => player.result.current.playAlbum(album, longQueue));
+    random.mockRestore();
+
+    expect(player.result.current.currentSong?.id).toBe("q11");
+  });
+
+  it("starts at the first track without a start index when shuffle is off", () => {
+    const player = renderPlayer();
+
+    act(() => player.result.current.playAlbum(album, longQueue));
+
+    expect(player.result.current.currentSong?.id).toBe("q0");
+  });
+
+  it("honours an explicit start index while shuffle is on", () => {
+    const player = renderPlayer();
+    act(() => player.result.current.toggleShuffle());
+
+    act(() => player.result.current.playAlbum(album, longQueue, 4));
+
+    expect(player.result.current.currentSong?.id).toBe("q4");
+  });
+
   it("stops after the shuffled queue is exhausted when repeat is off", () => {
     const player = renderPlayer();
     startAlbum(player);

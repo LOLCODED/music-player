@@ -39,11 +39,15 @@ export function useMediaSession(song: Song | null, isPlaying: boolean, handlers:
   useEffect(() => {
     if (!("mediaSession" in navigator)) return;
     const session = navigator.mediaSession;
-    const actions: [MediaSessionAction, MediaSessionActionHandler][] = [
+    const actions: [MediaSessionAction, MediaSessionActionHandler | null][] = [
       ["play", () => { if (!playingRef.current) handlersRef.current.togglePlayPause(); }],
       ["pause", () => { if (playingRef.current) handlersRef.current.togglePlayPause(); }],
       ["nexttrack", () => handlersRef.current.skipNext()],
       ["previoustrack", () => handlersRef.current.skipPrevious()],
+      // iOS shows ±10s skip buttons in place of next/previous unless seeking is
+      // explicitly unsupported.
+      ["seekbackward", null],
+      ["seekforward", null],
     ];
     for (const [action, handler] of actions) {
       try {
