@@ -15,6 +15,12 @@
 		504EC30F1FED79650016851F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30E1FED79650016851F /* Assets.xcassets */; };
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
+		B8C1D3388040018BAFE05BBF /* CascadeBridgeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B1E20E46720B51E5C9652D4 /* CascadeBridgeViewController.swift */; };
+		6FE917A134580F255A4A3956 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABBACA0E061E8E40BF09588A /* SceneDelegate.swift */; };
+		E3FDE994F1DE21AA3AF50DBF /* CarPlayLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF808776838C6B6AC0EE6426 /* CarPlayLibrary.swift */; };
+		092F478A6845779C5BAD703E /* CarPlayPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F34FD86A0B262DAEE65283B /* CarPlayPlugin.swift */; };
+		302F0E0B590B8FDC4F361DA2 /* CarPlayArtworkLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC2E27FE20B2C1CADB3B7FB3 /* CarPlayArtworkLoader.swift */; };
+		3792A5895EC8168A66F84BFC /* CarPlaySceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE46783A40CB77A4AB77A014 /* CarPlaySceneDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,6 +33,13 @@
 		504EC3111FED79650016851F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		504EC3131FED79650016851F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
+		7B1E20E46720B51E5C9652D4 /* CascadeBridgeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CascadeBridgeViewController.swift; sourceTree = "<group>"; };
+		ABBACA0E061E8E40BF09588A /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		CF808776838C6B6AC0EE6426 /* CarPlayLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlayLibrary.swift; sourceTree = "<group>"; };
+		2F34FD86A0B262DAEE65283B /* CarPlayPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlayPlugin.swift; sourceTree = "<group>"; };
+		DC2E27FE20B2C1CADB3B7FB3 /* CarPlayArtworkLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlayArtworkLoader.swift; sourceTree = "<group>"; };
+		AE46783A40CB77A4AB77A014 /* CarPlaySceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarPlaySceneDelegate.swift; sourceTree = "<group>"; };
+		31D03A6EDB916C7917D2E836 /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,6 +75,13 @@
 			children = (
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
+				7B1E20E46720B51E5C9652D4 /* CascadeBridgeViewController.swift */,
+				ABBACA0E061E8E40BF09588A /* SceneDelegate.swift */,
+				CF808776838C6B6AC0EE6426 /* CarPlayLibrary.swift */,
+				2F34FD86A0B262DAEE65283B /* CarPlayPlugin.swift */,
+				DC2E27FE20B2C1CADB3B7FB3 /* CarPlayArtworkLoader.swift */,
+				AE46783A40CB77A4AB77A014 /* CarPlaySceneDelegate.swift */,
+				31D03A6EDB916C7917D2E836 /* App.entitlements */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
@@ -154,6 +174,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
+				B8C1D3388040018BAFE05BBF /* CascadeBridgeViewController.swift in Sources */,
+				6FE917A134580F255A4A3956 /* SceneDelegate.swift in Sources */,
+				E3FDE994F1DE21AA3AF50DBF /* CarPlayLibrary.swift in Sources */,
+				092F478A6845779C5BAD703E /* CarPlayPlugin.swift in Sources */,
+				302F0E0B590B8FDC4F361DA2 /* CarPlayArtworkLoader.swift in Sources */,
+				3792A5895EC8168A66F84BFC /* CarPlaySceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -291,6 +317,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 77Y56R5ZXT;
@@ -314,6 +341,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 77Y56R5ZXT;

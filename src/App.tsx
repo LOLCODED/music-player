@@ -7,6 +7,7 @@ import LoginPage from "./pages/LoginPage";
 import AppShell from "./components/AppShell";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DeviceEffects from "./components/DeviceEffects";
+import CarPlayConnector from "./components/CarPlayConnector";
 
 const App: React.FC = () => {
   return (
@@ -14,6 +15,7 @@ const App: React.FC = () => {
       <AuthProvider>
         <DeviceEffects />
         <MusicPlayerProvider>
+          <CarPlayConnector />
           <BrowserRouter>
             <Routes>
               <Route path="/login" element={<LoginPage />} />

@@ -55,6 +55,16 @@ npx cap open ios
 
 `cap sync` copies the web build into the app and writes `ios/App/App/capacitor.config.json` (it holds the keyboard settings), so run it after every pull, not just after adding plugins. In Xcode, pick your iPhone as the run destination, set your team under Signing & Capabilities for the App target, and press ⌘R. If Xcode complains about Swift packages, use File › Packages › Reset Package Caches. Requires a Mac and an Apple developer account for device deployment.
 
+#### CarPlay
+
+The CarPlay screen (Playlists, Recently Played, Recently Added) is built in, but Apple only shows apps in CarPlay that hold the CarPlay audio entitlement, which you have to request:
+
+1. Request it at [developer.apple.com/contact/request/carplay](https://developer.apple.com/contact/request/carplay/) for the app's bundle ID (`com.lolcoded.cascade`) and wait for approval.
+2. In the Apple Developer portal, add the CarPlay Audio capability to the App ID so new provisioning profiles include it.
+3. In `ios/App/App.xcodeproj/project.pbxproj`, change both `"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = App/App.entitlements;` lines to `CODE_SIGN_ENTITLEMENTS = App/App.entitlements;`. Until then, the entitlement is only applied to Simulator builds, because device signing fails if the profile lacks it.
+
+To try it in the Simulator, run the app and open I/O › External Displays › CarPlay.
+
 ## Self-hosting with Docker
 
 The web build can be served as a Docker container — same idea as running Navidrome, point a port at it and you're done.
