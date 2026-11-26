@@ -51,6 +51,13 @@ describe("useMediaSession", () => {
     expect(skipNext).toHaveBeenCalled();
   });
 
+  it("re-registers the handlers when a song loads without playing", () => {
+    renderHook(() => useMediaSession(song, false, { togglePlayPause: vi.fn(), skipNext: vi.fn(), skipPrevious: vi.fn() }));
+    handlers.clear();
+    document.body.appendChild(document.createElement("audio")).dispatchEvent(new Event("loadedmetadata"));
+    expect(handlers.has("play")).toBe(true);
+  });
+
   it("stops re-registering after unmount", () => {
     const { unmount } = renderHook(() => useMediaSession(song, true, { togglePlayPause: vi.fn(), skipNext: vi.fn(), skipPrevious: vi.fn() }));
     unmount();

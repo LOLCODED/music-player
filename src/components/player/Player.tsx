@@ -20,6 +20,7 @@ interface PlayerProps {
   onNext: () => void;
   onPrevious: () => void;
   onRequestStreamUrl: (songId: string, timeOffset?: number) => string;
+  onRequestResumeProgress?: (songId: string) => number;
   shuffle: boolean;
   repeatMode: RepeatMode;
   onToggleShuffle: () => void;
@@ -40,6 +41,7 @@ const Player: React.FC<PlayerProps> = ({
   onNext,
   onPrevious,
   onRequestStreamUrl,
+  onRequestResumeProgress,
   shuffle,
   repeatMode,
   onToggleShuffle,
@@ -67,6 +69,7 @@ const Player: React.FC<PlayerProps> = ({
     onSeek,
     onNext,
     onRequestStreamUrl,
+    onRequestResumeProgress,
     onPlaybackBlocked: handlePlaybackBlocked,
   });
 

@@ -2,12 +2,18 @@ import { vi } from "vitest";
 import React from "react";
 import { act, renderHook } from "@testing-library/react";
 import { MusicPlayerProvider, useMusicPlayer } from "./MusicPlayerContext";
+import { SettingsProvider } from "./SettingsContext";
 import { SubsonicAlbum, SubsonicSong } from "../types/subsonic";
+import { loadPlaybackSnapshot, savePlaybackProgress, savePlaybackQueue } from "../utils/playbackSnapshot";
+
+const auth = vi.hoisted(() => ({
+  subsonicConfig: null as { serverUrl: string; username: string } | null,
+}));
 
 vi.mock("./AuthContext", () => ({
   useAuth: () => ({
     isAuthenticated: true,
-    subsonicConfig: null,
+    subsonicConfig: auth.subsonicConfig,
     subsonicService: {
       getCoverArtUrl: (id: string, size?: number) =>
         `https://music.example.com/cover/${id}?size=${size ?? ""}`,
@@ -55,7 +61,9 @@ const songs: SubsonicSong[] = [
 ];
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <MusicPlayerProvider>{children}</MusicPlayerProvider>
+  <SettingsProvider>
+    <MusicPlayerProvider>{children}</MusicPlayerProvider>
+  </SettingsProvider>
 );
 
 function renderPlayer() {
@@ -351,5 +359,56 @@ describe("getStreamUrl", () => {
     expect(player.result.current.getStreamUrl("s1")).toBe(
       "https://music.example.com/stream/s1"
     );
+  });
+});
+
+describe("remembering the queue", () => {
+  const connection = "https://music.example.com|me";
+
+  beforeEach(() => {
+    localStorage.clear();
+    auth.subsonicConfig = { serverUrl: "https://music.example.com", username: "me" };
+  });
+  afterEach(() => {
+    auth.subsonicConfig = null;
+  });
+
+  it("restores the saved queue paused, at the saved position", () => {
+    savePlaybackQueue(connection, {
+      songs,
+      index: 2,
+      album,
+      sourcePath: "/album/al-1",
+      shuffle: true,
+      repeatMode: "all",
+    });
+    savePlaybackProgress(connection, 40);
+
+    const player = renderPlayer();
+
+    expect(player.result.current.currentSong?.id).toBe("s3");
+    expect(player.result.current.isPlaying).toBe(false);
+    expect(player.result.current.shuffle).toBe(true);
+    expect(player.result.current.repeatMode).toBe("all");
+    expect(player.result.current.progress).toBe(40);
+    expect(player.result.current.takeResumeProgress("s3")).toBe(40);
+    expect(player.result.current.takeResumeProgress("s3")).toBe(0);
+  });
+
+  it("saves the queue as it changes", () => {
+    const player = renderPlayer();
+    startAlbum(player, songs, 1);
+    act(() => player.result.current.skipNext());
+    act(() => player.result.current.setProgress(25));
+
+    expect(loadPlaybackSnapshot(connection)).toMatchObject({ index: 2, progress: 25 });
+  });
+
+  it("forgets the saved queue when the player is stopped", () => {
+    const player = renderPlayer();
+    startAlbum(player);
+    act(() => player.result.current.stop());
+
+    expect(loadPlaybackSnapshot(connection)).toBeNull();
   });
 });

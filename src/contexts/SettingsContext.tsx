@@ -11,14 +11,16 @@ import {
   MobilePlayerPosition,
   Skin,
   PageAnimations,
+  StreamQuality,
   PAGE_ANIMATIONS,
+  STREAM_QUALITIES,
   PLAYER_POSITIONS,
   MOBILE_PLAYER_POSITIONS,
   SKINS,
   ACCENT_HOVER_MAP,
 } from '../types/settings';
 
-export type { PlayerPosition, MobilePlayerPosition, Skin, PageAnimations } from '../types/settings';
+export type { PlayerPosition, MobilePlayerPosition, Skin, PageAnimations, StreamQuality } from '../types/settings';
 
 interface SettingsContextType {
   isDarkMode: boolean;
@@ -33,6 +35,10 @@ interface SettingsContextType {
   setSkin: (skin: Skin) => void;
   pageAnimations: PageAnimations;
   setPageAnimations: (value: PageAnimations) => void;
+  wifiStreamQuality: StreamQuality;
+  setWifiStreamQuality: (quality: StreamQuality) => void;
+  cellularStreamQuality: StreamQuality;
+  setCellularStreamQuality: (quality: StreamQuality) => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -53,6 +59,14 @@ function readStoredSetting<T extends string>(
     return allowed.includes(value as T) ? (value as T) : fallback;
   } catch {
     return fallback;
+  }
+}
+
+function storeSetting(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Ignore storage failures; the setting still applies for this session.
   }
 }
 
@@ -90,6 +104,14 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const [pageAnimations, setPageAnimationsState] = useState<PageAnimations>(() =>
     readStoredSetting('pageAnimations', PAGE_ANIMATIONS, 'system')
+  );
+
+  const [wifiStreamQuality, setWifiStreamQualityState] = useState<StreamQuality>(() =>
+    readStoredSetting('wifiStreamQuality', STREAM_QUALITIES, 'original')
+  );
+
+  const [cellularStreamQuality, setCellularStreamQualityState] = useState<StreamQuality>(() =>
+    readStoredSetting('cellularStreamQuality', STREAM_QUALITIES, '192')
   );
 
   useEffect(() => {
@@ -156,6 +178,16 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, []);
 
+  const setWifiStreamQuality = useCallback((next: StreamQuality) => {
+    setWifiStreamQualityState(next);
+    storeSetting('wifiStreamQuality', next);
+  }, []);
+
+  const setCellularStreamQuality = useCallback((next: StreamQuality) => {
+    setCellularStreamQualityState(next);
+    storeSetting('cellularStreamQuality', next);
+  }, []);
+
   const value = useMemo(
     () => ({
       isDarkMode,
@@ -170,6 +202,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setSkin,
       pageAnimations,
       setPageAnimations,
+      wifiStreamQuality,
+      setWifiStreamQuality,
+      cellularStreamQuality,
+      setCellularStreamQuality,
     }),
     [
       isDarkMode,
@@ -184,6 +220,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setSkin,
       pageAnimations,
       setPageAnimations,
+      wifiStreamQuality,
+      setWifiStreamQuality,
+      cellularStreamQuality,
+      setCellularStreamQuality,
     ]
   );
 

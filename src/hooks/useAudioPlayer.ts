@@ -16,6 +16,8 @@ interface UseAudioPlayerProps {
   onSeek: (progress: number) => void;
   onNext: () => void;
   onRequestStreamUrl: (songId: string) => string;
+  // Percent a newly loaded song should start from (e.g. a restored queue).
+  onRequestResumeProgress?: (songId: string) => number;
   // Called when the browser refuses to start playback (e.g. autoplay policy)
   // so the owner can flip its "playing" state back to paused.
   onPlaybackBlocked?: () => void;
@@ -28,6 +30,7 @@ export function useAudioPlayer({
   onSeek,
   onNext,
   onRequestStreamUrl,
+  onRequestResumeProgress,
   onPlaybackBlocked,
 }: UseAudioPlayerProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -39,6 +42,10 @@ export function useAudioPlayer({
   useEffect(() => {
     onPlaybackBlockedRef.current = onPlaybackBlocked;
   }, [onPlaybackBlocked]);
+  const onRequestResumeProgressRef = useRef(onRequestResumeProgress);
+  useEffect(() => {
+    onRequestResumeProgressRef.current = onRequestResumeProgress;
+  }, [onRequestResumeProgress]);
 
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -90,17 +97,25 @@ export function useAudioPlayer({
     setCurrentTime(0);
     setDuration(0);
     lastReportedProgressRef.current = 0;
+    const resumeProgress = onRequestResumeProgressRef.current?.(currentSong.id) ?? 0;
     audio.src = streamUrl;
     audio.load();
 
+    const handleLoadedMetadata = () => {
+      if (resumeProgress > 0 && isFinite(audio.duration)) {
+        audio.currentTime = (resumeProgress / 100) * audio.duration;
+      }
+    };
     const handleLoadedData = () => {
       setIsLoading(false);
       if (isPlayingRef.current) {
         audio.play().catch(handlePlayFailure);
       }
     };
+    audio.addEventListener("loadedmetadata", handleLoadedMetadata, { once: true });
     audio.addEventListener("loadeddata", handleLoadedData);
     return () => {
+      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
       audio.removeEventListener("loadeddata", handleLoadedData);
     };
   }, [currentSong, onRequestStreamUrl, handlePlayFailure]);

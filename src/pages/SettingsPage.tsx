@@ -1,6 +1,6 @@
 import React from "react";
 import { useSettings } from "../contexts/SettingsContext";
-import { PageAnimations, PlayerPosition } from "../types/settings";
+import { PageAnimations, PlayerPosition, StreamQuality } from "../types/settings";
 import { useIsDesktop } from "../hooks/useIsDesktop";
 import { LayoutDiagram } from "../components/LayoutDiagram";
 import { LAYOUT_OPTIONS, FLOATER_CORNERS } from "../components/layoutOptions";
@@ -28,6 +28,13 @@ const ANIMATION_OPTIONS: { value: PageAnimations; label: string }[] = [
   { value: "system", label: "System" },
   { value: "on", label: "On" },
   { value: "off", label: "Off" },
+];
+
+const QUALITY_OPTIONS: { value: StreamQuality; label: string }[] = [
+  { value: "original", label: "Original" },
+  { value: "320", label: "320 kbps" },
+  { value: "192", label: "192 kbps" },
+  { value: "128", label: "128 kbps" },
 ];
 
 interface PillGroupProps<T extends string> {
@@ -101,6 +108,22 @@ const MotionSection: React.FC = () => {
   );
 };
 
+const StreamingSection: React.FC = () => {
+  const { wifiStreamQuality, setWifiStreamQuality, cellularStreamQuality, setCellularStreamQuality } = useSettings();
+  return (
+    <>
+      <div className="settings-section-label">Streaming Quality</div>
+      <div className="settings-field-label">Wi-Fi</div>
+      <PillGroup label="Wi-Fi streaming quality" options={QUALITY_OPTIONS} selected={wifiStreamQuality} onSelect={setWifiStreamQuality} />
+      <div className="settings-field-label">Cellular</div>
+      <PillGroup label="Cellular streaming quality" options={QUALITY_OPTIONS} selected={cellularStreamQuality} onSelect={setCellularStreamQuality} />
+      <p className="settings-hint">
+        Lower quality uses less data and keeps playing on weak signal. Changes apply from the next song.
+      </p>
+    </>
+  );
+};
+
 const DesktopLayoutSection: React.FC = () => {
   const { playerPosition, setPlayerPosition } = useSettings();
   const isFloaterSelected = playerPosition.startsWith("floater");
@@ -161,6 +184,7 @@ const SettingsPage: React.FC = () => {
           <p className="settings-hint">This skin uses its own colors. Switch back to Default to change theme or accent.</p>
         )}
         <MotionSection />
+        <StreamingSection />
         {isDesktop ? (
           <DesktopLayoutSection />
         ) : (

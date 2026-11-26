@@ -20,6 +20,7 @@ const GlobalPlayer: React.FC = () => {
     skipPrevious,
     setProgress,
     getStreamUrl,
+    takeResumeProgress,
     toggleShuffle,
     toggleRepeat,
     stop,
@@ -62,6 +63,7 @@ const GlobalPlayer: React.FC = () => {
         onNext={skipNext}
         onPrevious={skipPrevious}
         onRequestStreamUrl={getStreamUrl}
+        onRequestResumeProgress={takeResumeProgress}
         shuffle={shuffle}
         repeatMode={repeatMode}
         onToggleShuffle={toggleShuffle}

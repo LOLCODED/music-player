@@ -1,10 +1,8 @@
+import { connectionKey } from "./connectionKey";
+
 const STORAGE_KEY = "navidromeSessions";
 
 type Sessions = Record<string, string>;
-
-function sessionKey(serverUrl: string, username: string): string {
-  return `${serverUrl.replace(/\/+$/, "")}|${username}`;
-}
 
 function readAll(): Sessions {
   try {
@@ -24,14 +22,14 @@ function writeAll(sessions: Sessions): void {
 }
 
 export function getNativeSession(serverUrl: string, username: string): string | null {
-  return readAll()[sessionKey(serverUrl, username)] ?? null;
+  return readAll()[connectionKey(serverUrl, username)] ?? null;
 }
 
 export function setNativeSession(serverUrl: string, username: string, token: string): void {
-  writeAll({ ...readAll(), [sessionKey(serverUrl, username)]: token });
+  writeAll({ ...readAll(), [connectionKey(serverUrl, username)]: token });
 }
 
 export function clearNativeSession(serverUrl: string, username: string): void {
-  const { [sessionKey(serverUrl, username)]: _removed, ...rest } = readAll();
+  const { [connectionKey(serverUrl, username)]: _removed, ...rest } = readAll();
   writeAll(rest);
 }

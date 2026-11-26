@@ -14,6 +14,9 @@ import { useAuth } from "./AuthContext";
 import { Song, RepeatMode } from "../types/player";
 import { recordSongPlay, recordPlaylistPlay } from "../utils/recentlyPlayed";
 import { useMediaSession } from "../hooks/useMediaSession";
+import { useStreamSource } from "../hooks/useStreamSource";
+import { usePlaybackPersistence } from "../hooks/usePlaybackPersistence";
+import type { PlaybackSnapshot } from "../utils/playbackSnapshot";
 
 export type { RepeatMode } from "../types/player";
 // Backwards-compat alias
@@ -47,6 +50,8 @@ interface MusicPlayerContextType {
   skipPrevious: () => void;
   setProgress: (progress: number) => void;
   getStreamUrl: (songId: string, timeOffset?: number) => string;
+  // Where a restored song should resume (percent), returned once.
+  takeResumeProgress: (songId: string) => number;
   toggleShuffle: () => void;
   toggleRepeat: () => void;
   stop: () => void;
@@ -95,14 +100,6 @@ export const MusicPlayerProvider: React.FC<MusicPlayerProviderProps> = ({
     (coverArtId?: string) => {
       if (!coverArtId || !subsonicService) return DEFAULT_ALBUM_ART;
       return subsonicService.getCoverArtUrl(coverArtId, COVER_ART_SIZE);
-    },
-    [subsonicService]
-  );
-
-  const getStreamUrl = useCallback(
-    (songId: string, timeOffset?: number) => {
-      if (!subsonicService) return "";
-      return subsonicService.getStreamUrl(songId, timeOffset);
     },
     [subsonicService]
   );
@@ -197,6 +194,49 @@ export const MusicPlayerProvider: React.FC<MusicPlayerProviderProps> = ({
     return currentPlaylist.findIndex((song) => song.id === currentSong.id);
   }, [currentSong, currentPlaylist, currentIndex]);
 
+  // Set when a saved queue is restored, consumed when its song loads.
+  const resumeRef = useRef<{ songId: string; progress: number } | null>(null);
+
+  const restoreSnapshot = useCallback(
+    (snapshot: PlaybackSnapshot) => {
+      const song = snapshot.songs[snapshot.index];
+      setCurrentSong(buildPlayableSong(song, snapshot.album ?? undefined));
+      setCurrentAlbum(snapshot.album);
+      setCurrentPlaylist(snapshot.songs);
+      setCurrentSourcePath(snapshot.sourcePath);
+      setCurrentIndex(snapshot.index);
+      setShuffle(snapshot.shuffle);
+      setRepeatMode(snapshot.repeatMode);
+      setProgressState(snapshot.progress);
+      regenerateShuffleOrder(snapshot.songs.length, snapshot.index);
+      resumeRef.current = { songId: song.id, progress: snapshot.progress };
+    },
+    [buildPlayableSong, regenerateShuffleOrder]
+  );
+
+  const takeResumeProgress = useCallback((songId: string) => {
+    const resume = resumeRef.current;
+    resumeRef.current = null;
+    return resume?.songId === songId ? resume.progress : 0;
+  }, []);
+
+  const queueSnapshot = useMemo(
+    () =>
+      currentPlaylist[currentIndex]
+        ? {
+            songs: currentPlaylist,
+            index: currentIndex,
+            album: currentAlbum,
+            sourcePath: currentSourcePath,
+            shuffle,
+            repeatMode,
+          }
+        : null,
+    [currentPlaylist, currentIndex, currentAlbum, currentSourcePath, shuffle, repeatMode]
+  );
+
+  const clearSavedPlayback = usePlaybackPersistence(queueSnapshot, progress, restoreSnapshot);
+
   const stop = useCallback(() => {
     setCurrentSong(null);
     setIsPlaying(false);
@@ -206,7 +246,9 @@ export const MusicPlayerProvider: React.FC<MusicPlayerProviderProps> = ({
     setCurrentSourcePath(null);
     setCurrentIndex(-1);
     shuffleOrderRef.current = [];
-  }, []);
+    resumeRef.current = null;
+    clearSavedPlayback();
+  }, [clearSavedPlayback]);
 
   const toggleShuffle = useCallback(() => {
     // Build the new order outside the updater: React may invoke updaters
@@ -234,14 +276,28 @@ export const MusicPlayerProvider: React.FC<MusicPlayerProviderProps> = ({
     [currentPlaylist, currentAlbum, buildPlayableSong]
   );
 
+  const playbackOrder = useCallback(
+    () =>
+      shuffle
+        ? shuffleOrderRef.current
+        : Array.from({ length: currentPlaylist.length }, (_, i) => i),
+    [shuffle, currentPlaylist.length]
+  );
+
+  const peekNextSongId = useCallback((): string | undefined => {
+    const order = playbackOrder();
+    const nextIndex = order[order.indexOf(getCurrentSongIndex()) + 1];
+    if (nextIndex !== undefined) return currentPlaylist[nextIndex]?.id;
+    // A shuffled wrap reshuffles first, so its next track isn't known yet.
+    return repeatMode === "all" && !shuffle ? currentPlaylist[0]?.id : undefined;
+  }, [playbackOrder, getCurrentSongIndex, currentPlaylist, repeatMode, shuffle]);
+
   const stepThroughOrder = useCallback(
     (direction: 1 | -1) => {
       if (!currentSong || !currentPlaylist.length) return;
 
       const index = getCurrentSongIndex();
-      const order = shuffle
-        ? shuffleOrderRef.current
-        : Array.from({ length: currentPlaylist.length }, (_, i) => i);
+      const order = playbackOrder();
       const position = order.indexOf(index);
       const nextPosition = position + direction;
 
@@ -276,6 +332,7 @@ export const MusicPlayerProvider: React.FC<MusicPlayerProviderProps> = ({
       currentSong,
       currentPlaylist,
       getCurrentSongIndex,
+      playbackOrder,
       shuffle,
       repeatMode,
       regenerateShuffleOrder,
@@ -297,6 +354,13 @@ export const MusicPlayerProvider: React.FC<MusicPlayerProviderProps> = ({
     [currentSong]
   );
 
+  const getStreamUrl = useStreamSource(
+    subsonicService,
+    currentSong?.id ?? null,
+    isPlaying,
+    peekNextSongId
+  );
+
   useMediaSession(currentSong, isPlaying, { togglePlayPause, skipNext, skipPrevious });
 
   const value = useMemo<MusicPlayerContextType>(
@@ -316,6 +380,7 @@ export const MusicPlayerProvider: React.FC<MusicPlayerProviderProps> = ({
       skipPrevious,
       setProgress,
       getStreamUrl,
+      takeResumeProgress,
       toggleShuffle,
       toggleRepeat,
       stop,
@@ -338,6 +403,7 @@ export const MusicPlayerProvider: React.FC<MusicPlayerProviderProps> = ({
       skipPrevious,
       setProgress,
       getStreamUrl,
+      takeResumeProgress,
       toggleShuffle,
       toggleRepeat,
       stop,

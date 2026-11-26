@@ -55,12 +55,14 @@ export function useMediaSession(song: Song | null, isPlaying: boolean, handlers:
       }
     };
     register();
-    // WebKit forgets handlers registered while no media element is playing and
-    // falls back to ±10s skip buttons, so re-register whenever playback starts.
-    // Media events don't bubble; capture them at the document instead.
-    document.addEventListener("playing", register, true);
+    // WebKit forgets handlers registered before a media element exists and
+    // falls back to ±10s skip buttons, so re-register once a song loads (a
+    // restored, paused queue) and whenever playback starts. Media events
+    // don't bubble; capture them at the document instead.
+    const reregisterOn = ["loadedmetadata", "playing"];
+    reregisterOn.forEach((event) => document.addEventListener(event, register, true));
     return () => {
-      document.removeEventListener("playing", register, true);
+      reregisterOn.forEach((event) => document.removeEventListener(event, register, true));
       for (const [action] of actions) {
         try {
           session.setActionHandler(action, null);

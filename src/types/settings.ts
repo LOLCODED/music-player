@@ -34,3 +34,12 @@ export const ACCENT_HOVER_MAP: Record<string, string> = {
   '#ec4899': '#f472b6',
   '#6366f1': '#818cf8',
 };
+
+export const STREAM_QUALITIES = ['original', '320', '192', '128'] as const;
+
+export type StreamQuality = (typeof STREAM_QUALITIES)[number];
+
+// Kbps cap sent to the server; undefined streams the original file.
+export function streamQualityBitRate(quality: StreamQuality): number | undefined {
+  return quality === 'original' ? undefined : Number(quality);
+}
